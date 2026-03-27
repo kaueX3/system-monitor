@@ -1052,23 +1052,40 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             
             screenshotBtn.disabled = false;
             
-            try {
-                const res = await fetch(`/api/screenshot/${endpointId}`);
-                const data = await res.json();
-                if (data.image) {
-                    document.getElementById('screenContent').innerHTML = `
-                        <div class="live-indicator"><span class="live-dot"></span><span>LIVE</span></div>
-                        <img class="screen-image" src="data:image/png;base64,${data.image}" alt="Visualizacao remota">
-                        <div style="margin-top: 10px; color: #6b7280; font-size: 0.8rem;">
-                            Última atualização: ${new Date(data.timestamp).toLocaleString()}
-                        </div>
-                    `;
-                } else {
-                    document.getElementById('screenContent').innerHTML = '<div class="empty-state">Sem imagem disponível. Use o botão "Capturar Screenshot" para solicitar uma nova captura.</div>';
+            // Solicita screenshot automático ao selecionar
+            await requestScreenshot();
+            
+            // Depois de 3 segundos, começa a atualizar automático
+            setTimeout(() => {
+                autoUpdateScreen(endpointId);
+            }, 3000);
+        }
+        
+        async function autoUpdateScreen(endpointId) {
+            // Atualiza a cada 5 segundos
+            const updateInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/screenshot/${endpointId}`);
+                    const data = await res.json();
+                    if (data.image) {
+                        document.getElementById('screenContent').innerHTML = `
+                            <div class="live-indicator"><span class="live-dot"></span><span>LIVE</span></div>
+                            <img class="screen-image" src="data:image/png;base64,${data.image}" alt="Visualizacao remota">
+                            <div style="margin-top: 10px; color: #6b7280; font-size: 0.8rem;">
+                                Última atualização: ${new Date(data.timestamp).toLocaleString()}
+                            </div>
+                        `;
+                    }
+                } catch(e) {
+                    console.error('Erro ao atualizar automaticamente:', e);
                 }
-            } catch(e) {
-                document.getElementById('screenContent').innerHTML = '<div class="empty-state">Erro ao carregar imagem</div>';
-            }
+            }, 5000);
+            
+            // Para o intervalo quando mudar de endpoint
+            const selectElement = document.getElementById('endpointSelect');
+            selectElement.addEventListener('change', () => {
+                clearInterval(updateInterval);
+            });
         }
         
         // Inicialização
