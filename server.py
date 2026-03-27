@@ -87,6 +87,22 @@ def receive_screenshot():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/api/request_screenshot/<endpoint_id>', methods=['POST'])
+def request_screenshot(endpoint_id):
+    """Solicita screenshot manual de um endpoint"""
+    try:
+        # Aqui você implementaria a lógica para enviar um comando
+        # para o endpoint específico capturar screenshot
+        # Por agora, vamos apenas registrar a solicitação
+        print(f"Solicitacao de screenshot manual para: {endpoint_id}")
+        return jsonify({
+            'status': 'success', 
+            'message': f'Screenshot solicitado para {endpoint_id}',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/endpoints')
 def get_endpoints():
     """Retorna lista de endpoints"""
@@ -359,6 +375,35 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         .token-valid {
             color: #22c55e;
         }
+        .screenshot-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            margin-bottom: 20px;
+        }
+        .screenshot-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+        .screenshot-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .screen-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
         .screen-section {
             background: rgba(17, 17, 27, 0.6);
             backdrop-filter: blur(10px);
@@ -489,9 +534,14 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         <div id="remote" class="tab-content">
             <h2 class="section-title">Visualizacao Remota</h2>
             <div class="screen-section">
-                <select id="endpointSelect" class="screen-select" onchange="loadScreen()">
-                    <option value="">Selecione um endpoint...</option>
-                </select>
+                <div class="screen-controls">
+                    <select id="endpointSelect" class="screen-select" onchange="loadScreen()">
+                        <option value="">Selecione um endpoint...</option>
+                    </select>
+                    <button id="screenshotBtn" class="screenshot-btn" onclick="requestScreenshot()" disabled>
+                        📸 Capturar Screenshot
+                    </button>
+                </div>
                 <div class="screen-display" id="screenContent">
                     <div class="empty-state">Selecione um endpoint para visualizar</div>
                 </div>
@@ -648,24 +698,77 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
             } catch(e) {}
         }
         
+        async function requestScreenshot() {
+            const endpointId = document.getElementById('endpointSelect').value;
+            if (!endpointId) return;
+            
+            const btn = document.getElementById('screenshotBtn');
+            btn.disabled = true;
+            btn.textContent = '📸 Capturando...';
+            
+            try {
+                const res = await fetch(`/api/request_screenshot/${endpointId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    // Mostra mensagem de sucesso
+                    const screenContent = document.getElementById('screenContent');
+                    screenContent.innerHTML = `
+                        <div style="color: #22c55e; margin-bottom: 20px;">
+                            ✅ Screenshot solicitado com sucesso! Aguardando captura...
+                        </div>
+                        <div class="live-indicator"><span class="live-dot"></span><span>PROCESSANDO</span></div>
+                    `;
+                    
+                    // Tenta carregar o screenshot após alguns segundos
+                    setTimeout(() => {
+                        loadScreen();
+                        btn.disabled = false;
+                        btn.textContent = '📸 Capturar Screenshot';
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Erro ao solicitar screenshot');
+                }
+            } catch (error) {
+                document.getElementById('screenContent').innerHTML = `
+                    <div style="color: #ef4444;">❌ Erro: ${error.message}</div>
+                `;
+                btn.disabled = false;
+                btn.textContent = '📸 Capturar Screenshot';
+            }
+        }
+        
         async function loadScreen() {
             const endpointId = document.getElementById('endpointSelect').value;
+            const screenshotBtn = document.getElementById('screenshotBtn');
+            
             if (!endpointId) {
                 document.getElementById('screenContent').innerHTML = '<div class="empty-state">Selecione um endpoint para visualizar</div>';
+                screenshotBtn.disabled = true;
                 return;
             }
+            
+            screenshotBtn.disabled = false;
+            
             try {
                 const res = await fetch(`/api/screenshot/${endpointId}`);
                 const data = await res.json();
                 if (data.image) {
                     document.getElementById('screenContent').innerHTML = `
                         <div class="live-indicator"><span class="live-dot"></span><span>LIVE</span></div>
-                        <img class="screen-image" src="data:image/png;base64,${data.image}" alt="Visualizacao remota">`;
+                        <img class="screen-image" src="data:image/png;base64,${data.image}" alt="Visualizacao remota">
+                        <div style="margin-top: 10px; color: #6b7280; font-size: 0.8rem;">
+                            Última atualização: ${new Date(data.timestamp).toLocaleString()}
+                        </div>
+                    `;
                 } else {
-                    document.getElementById('screenContent').innerHTML = '<div class="empty-state">Sem imagem disponivel</div>';
+                    document.getElementById('screenContent').innerHTML = '<div class="empty-state">Sem imagem disponível. Use o botão "Capturar Screenshot" para solicitar uma nova captura.</div>';
                 }
             } catch(e) {
-                document.getElementById('screenContent').innerHTML = '<div class="empty-state">Erro ao carregar</div>';
+                document.getElementById('screenContent').innerHTML = '<div class="empty-state">Erro ao carregar imagem</div>';
             }
         }
         
