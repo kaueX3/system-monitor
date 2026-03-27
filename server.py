@@ -19,6 +19,7 @@ CORS(app)
 endpoints = {}
 metrics_data = []
 endpoint_screenshots = {}
+screenshot_requests = {}  # Armazena solicitações de screenshot
 
 @app.route('/')
 def index():
@@ -91,10 +92,13 @@ def receive_screenshot():
 def request_screenshot(endpoint_id):
     """Solicita screenshot manual de um endpoint"""
     try:
-        # Aqui você implementaria a lógica para enviar um comando
-        # para o endpoint específico capturar screenshot
-        # Por agora, vamos apenas registrar a solicitação
-        print(f"Solicitacao de screenshot manual para: {endpoint_id}")
+        # Marca solicitação como pendente
+        screenshot_requests[endpoint_id] = {
+            'requested': True,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        print(f"Screenshot solicitado para: {endpoint_id}")
         return jsonify({
             'status': 'success', 
             'message': f'Screenshot solicitado para {endpoint_id}',
@@ -102,6 +106,28 @@ def request_screenshot(endpoint_id):
         })
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/screenshot_requests/<endpoint_id>')
+def check_screenshot_request(endpoint_id):
+    """Endpoint para verificar se há solicitação de screenshot"""
+    try:
+        request_data = screenshot_requests.get(endpoint_id, {})
+        return jsonify({
+            'request_screenshot': request_data.get('requested', False),
+            'timestamp': request_data.get('timestamp')
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/screenshot_requests/<endpoint_id>/clear', methods=['POST'])
+def clear_screenshot_request(endpoint_id):
+    """Limpa solicitação de screenshot"""
+    try:
+        if endpoint_id in screenshot_requests:
+            del screenshot_requests[endpoint_id]
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/endpoints')
 def get_endpoints():
@@ -728,7 +754,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                         loadScreen();
                         btn.disabled = false;
                         btn.textContent = '📸 Capturar Screenshot';
-                    }, 3000);
+                    }, 5000); // Aumentado para 5 segundos
                 } else {
                     throw new Error(data.message || 'Erro ao solicitar screenshot');
                 }
