@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEALDADE - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(0,212,255,0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .logo p {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00d4ff;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0,212,255,0.3);
+        }
+        .form-group input::placeholder {
+            color: #666;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,212,255,0.4);
+        }
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        .message {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            border-left: 4px solid #00d4ff;
+        }
+        .message p {
+            color: #aaa;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        .error {
+            background: rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,0,0,0.3);
+            color: #ff6b6b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+        .success {
+            background: rgba(0,255,0,0.1);
+            border: 1px solid rgba(0,255,0,0.3);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>LEALDADE</h1>
+            <p>Painel de Controle</p>
+        </div>
+        
+        <div class="error" id="errorMsg"></div>
+        <div class="success" id="successMsg"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                ENTRAR
+            </button>
+        </form>
+        
+        <div class="message">
+            <p>Se você chegou até aqui, tem um longo caminho a seguir...</p>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Resetar mensagens
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            // Adicionar estado de carregamento
+            loginBtn.classList.add('loading');
+            loginBtn.textContent = 'Verificando...';
+            loginBtn.disabled = true;
+            
+            // Simular verificação (em um sistema real, isso seria uma chamada API)
+            setTimeout(() => {
+                if (username === 'lealdade' && password === 'lealdade') {
+                    successMsg.textContent = 'Login bem-sucedido! Redirecionando...';
+                    successMsg.style.display = 'block';
+                    
+                    // Redirecionar para a página principal após 2 segundos
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    errorMsg.textContent = 'Usuário ou senha incorretos!';
+                    errorMsg.style.display = 'block';
+                    
+                    // Resetar botão
+                    loginBtn.classList.remove('loading');
+                    loginBtn.textContent = 'ENTRAR';
+                    loginBtn.disabled = false;
+                    
+                    // Limpar campos
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').focus();
+                }
+            }, 1500);
+        });
+        
+        // Adicionar efeito de digitação
+        document.getElementById('username').addEventListener('input', function() {
+            if (this.value.length > 0) {
+                this.style.borderColor = '#00d4ff';
+            } else {
+                this.style.borderColor = 'rgba(0,212,255,0.3)';
+            }
+        });
+        
+        document.getElementById('password').addEventListener('input', function() {
+            if (this.value.length > 0) {
+                this.style.borderColor = '#00d4ff';
+            } else {
+                this.style.borderColor = 'rgba(0,212,255,0.3)';
+            }
+        });
+    </script>
+</body>
+</html>
