@@ -452,10 +452,10 @@
         .data-link:hover { color: #d8b4fe; text-decoration: underline; }
 
         .btn-print {
-            background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-            color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 6px;
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #ffffff;
+            border-radius: 4px;
             padding: 0 35px;
             height: 51px; /* Matches client-select size */
             font-weight: 800;
@@ -467,19 +467,22 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
             flex-shrink: 0;
             margin: 0;
+            font-family: 'Inter', sans-serif;
         }
         .btn-print:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
-            border-color: rgba(255,255,255,0.4);
-            background: linear-gradient(135deg, #b66df8 0%, #8c2edc 100%);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #ffffff;
+            border-color: #ffffff;
         }
         .btn-print:active {
             transform: translateY(1px);
-            box-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
