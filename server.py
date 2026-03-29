@@ -88,14 +88,14 @@ WARNING_TEMPLATE = """
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, rgba(127, 29, 29, 0.1), rgba(239, 68, 68, 0.05));
+            background: linear-gradient(45deg, rgba(76, 29, 149, 0.1), rgba(124, 58, 237, 0.05));
             z-index: 1;
         }
         
         .warning-container {
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(239, 68, 68, 0.3);
+            border: 2px solid rgba(124, 58, 237, 0.3);
             border-radius: 20px;
             padding: 50px;
             max-width: 500px;
@@ -107,13 +107,13 @@ WARNING_TEMPLATE = """
         }
         
         @keyframes warningPulse {
-            0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.2); }
-            50% { box-shadow: 0 0 50px rgba(239, 68, 68, 0.4); }
+            0%, 100% { box-shadow: 0 0 30px rgba(124, 58, 237, 0.2); }
+            50% { box-shadow: 0 0 50px rgba(124, 58, 237, 0.4); }
         }
         
         .warning-icon {
             font-size: 4em;
-            color: #ef4444;
+            color: #7c3aed;
             margin-bottom: 20px;
             animation: shake 0.5s infinite;
         }
@@ -126,15 +126,15 @@ WARNING_TEMPLATE = """
         
         .warning-title {
             font-size: 2em;
-            color: #ef4444;
+            color: #7c3aed;
             margin-bottom: 15px;
             font-weight: 700;
-            text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
         }
         
         .warning-message {
             font-size: 1.2em;
-            color: #fca5a5;
+            color: #a855f7;
             margin-bottom: 10px;
             line-height: 1.6;
         }
@@ -147,15 +147,15 @@ WARNING_TEMPLATE = """
         }
         
         .warning-details {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 30px;
         }
         
         .warning-details p {
-            color: #fca5a5;
+            color: #a855f7;
             margin-bottom: 10px;
             font-size: 0.9em;
         }
@@ -165,7 +165,7 @@ WARNING_TEMPLATE = """
         }
         
         .redirect-btn {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background: linear-gradient(135deg, #7c3aed, #6b21a8);
             color: white;
             border: none;
             padding: 15px 30px;
@@ -180,11 +180,11 @@ WARNING_TEMPLATE = """
         
         .redirect-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 5px 20px rgba(124, 58, 237, 0.3);
         }
         
         .countdown {
-            color: #fca5a5;
+            color: #a855f7;
             font-size: 1.1em;
             margin-top: 20px;
             font-weight: 600;
@@ -195,11 +195,11 @@ WARNING_TEMPLATE = """
             bottom: 20px;
             right: 20px;
             background: rgba(0, 0, 0, 0.8);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(124, 58, 237, 0.3);
             border-radius: 10px;
             padding: 15px;
             font-size: 0.8em;
-            color: #fca5a5;
+            color: #a855f7;
             z-index: 20;
         }
     </style>
@@ -208,8 +208,8 @@ WARNING_TEMPLATE = """
     <div class="warning-container">
         <div class="warning-icon">⚠️</div>
         <h1 class="warning-title">ACESSO NEGADO</h1>
-        <p class="warning-message">Não vai ser fácil assim...</p>
-        <p class="warning-subtitle">Tentativa de acesso não autorizado detectada</p>
+        <p class="warning-message">Não vai ser fácil assim, você se meteu onde não deveria...</p>
+        <p class="warning-subtitle">Tentativa de acesso não autorizado foi registrada</p>
         
         <div class="warning-details">
             <p>🔒 Esta área é protegida por autenticação</p>
