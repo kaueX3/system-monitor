@@ -780,12 +780,14 @@ HTML_TEMPLATE = """
         function loadAllData() {
             loadEndpoints();
             
-            fetch('/api/metrics_data')
+            // Atualizar métricas
+            fetch('/api/stats')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('totalMetrics').textContent = data.length;
+                    document.getElementById('totalMetrics').textContent = data.total_metrics || 0;
+                    document.getElementById('totalScreenshots').textContent = Object.keys(endpoint_screenshots).length || 0;
                 })
-                .catch(error => console.error('Error loading metrics:', error));
+                .catch(error => console.error('Error loading stats:', error));
         }
 
         // Carrega dados iniciais
@@ -1364,34 +1366,36 @@ def dashboard():
     return HTML_TEMPLATE.replace('{{UPDATE_TIME}}', datetime.now().strftime('%H:%M:%S'))
 
 @app.route('/api/register', methods=['POST'])
-@require_login
 def register_endpoint():
-    """Registra novo endpoint"""
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'success'})
-    
+    """Registra novo endpoint - rota pública para endpoints"""
     try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
+        data = request.get_json()
+        endpoint_id = data.get('id')
+        
+        if not endpoint_id:
+            return jsonify({'error': 'ID é obrigatório'}), 400
         
         endpoints[endpoint_id] = {
             'id': endpoint_id,
             'hostname': data.get('hostname', 'Unknown'),
             'user': data.get('user', 'Unknown'),
-            'ip_address': data.get('ip_address', 'Unknown'),
-            'external_ip': data.get('external_ip', 'Unknown'),
+            'ip_address': data.get('ip_address', '0.0.0.0'),
+            'external_ip': data.get('external_ip', '0.0.0.0'),
             'platform': data.get('platform', 'Unknown'),
             'ram': data.get('ram', 'Unknown'),
             'status': 'online',
-            'last_seen': datetime.now().isoformat(),
-            'registered_at': datetime.now().isoformat()
+            'last_seen': datetime.now().strftime('%H:%M:%S')
         }
         
-        print(f"[API] Endpoint registrado: {endpoint_id}")
-        return jsonify({'status': 'success'})
+        return jsonify({'success': True, 'message': 'Endpoint registrado'})
     except Exception as e:
-        print(f"[API] Erro ao registrar endpoint: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/endpoints', methods=['GET'])
+@require_login
+def get_endpoints():
+    """Lista todos os endpoints"""
+    return jsonify(list(endpoints.values()))
 
 @app.route('/api/tokens_data')
 @require_login
