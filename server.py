@@ -359,24 +359,150 @@ HTML_TEMPLATE = """
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
             gap: 25px; 
         }
-        .card { 
+        .card {
             background: linear-gradient(135deg, rgba(17, 17, 27, 0.8) 0%, rgba(31, 31, 46, 0.8) 100%);
             border: 1px solid rgba(124, 58, 237, 0.1);
             border-radius: 16px; 
             padding: 25px;
             backdrop-filter: blur(10px);
             transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .card:hover { transform: translateY(-3px); }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #7c3aed, #a855f7, #7c3aed);
+            background-size: 200% 100%;
+            animation: gradientMove 3s ease infinite;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        .card:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
+        }
         .card h3 { 
             color: #a855f7; 
             margin-bottom: 20px; 
             font-size: 1.3rem;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .card p { margin: 8px 0; color: #e0e0e0; }
-        .card strong { color: #a855f7; }
+        .card h3::before {
+            content: '🖥️';
+            font-size: 1.2em;
+        }
+        .device-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .device-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+        .device-info-item strong {
+            color: #e0e0e0;
+        }
+        .device-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .device-status.online {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+        .device-status.offline {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        .status-dot.offline {
+            background: #ef4444;
+            animation: none;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .device-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .device-btn {
+            flex: 1;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #7c3aed, #6b21a8);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .device-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+        }
+        .device-btn.screenshot {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+        .device-btn.screenshot:hover {
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+        }
+        
+        .token-card, .cookie-card, .password-card {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
+        .screenshot-img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 2px solid rgba(124, 58, 237, 0.3);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
         
         .refresh-btn {
             position: fixed;
@@ -392,7 +518,9 @@ HTML_TEMPLATE = """
             font-size: 24px;
             box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
             transition: transform 0.3s ease;
+            z-index: 1000;
         }
+        
         .refresh-btn:hover { transform: scale(1.1); }
         
         .data-section {
@@ -551,15 +679,59 @@ HTML_TEMPLATE = """
                     div.className = 'card';
                     div.innerHTML = `
                         <h3>${endpoint.hostname}</h3>
-                        <p><strong>ID:</strong> ${endpoint.id}</p>
-                        <p><strong>Usuário:</strong> ${endpoint.user}</p>
-                        <p><strong>IP Local:</strong> ${endpoint.ip_address}</p>
-                        <p><strong>IP Externo:</strong> ${endpoint.external_ip}</p>
-                        <p><strong>Plataforma:</strong> ${endpoint.platform}</p>
-                        <p><strong>RAM:</strong> ${endpoint.ram}</p>
-                        <p><strong>Status:</strong> 🟢 Online</p>
-                        <p><strong>Visto:</strong> ${endpoint.last_seen}</p>
-                        <button class="tab" style="margin-top: 15px; padding: 8px 16px;" onclick="requestScreenshot('${endpoint.id}')">📸 Screenshot</button>
+                        <div class="device-status ${endpoint.status || 'online'}">
+                            <span class="status-indicator">
+                                <span class="status-dot ${endpoint.status === 'offline' ? 'offline' : ''}"></span>
+                                ${endpoint.status === 'offline' ? 'Offline' : 'Online'}
+                            </span>
+                            <span style="color: #9ca3af; font-size: 0.8rem;">${endpoint.last_seen || 'Agora'}</span>
+                        </div>
+                        <div class="device-info">
+                            <div class="device-info-item">
+                                <span>👤</span>
+                                <div>
+                                    <strong>Usuário:</strong> ${endpoint.user}
+                                </div>
+                            </div>
+                            <div class="device-info-item">
+                                <span>🌐</span>
+                                <div>
+                                    <strong>IP Local:</strong> ${endpoint.ip_address}
+                                </div>
+                            </div>
+                            <div class="device-info-item">
+                                <span>🌍</span>
+                                <div>
+                                    <strong>IP Externo:</strong> ${endpoint.external_ip}
+                                </div>
+                            </div>
+                            <div class="device-info-item">
+                                <span>💻</span>
+                                <div>
+                                    <strong>Sistema:</strong> ${endpoint.platform}
+                                </div>
+                            </div>
+                            <div class="device-info-item">
+                                <span>💾</span>
+                                <div>
+                                    <strong>RAM:</strong> ${endpoint.ram}
+                                </div>
+                            </div>
+                            <div class="device-info-item">
+                                <span>🆔</span>
+                                <div>
+                                    <strong>ID:</strong> ${endpoint.id}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="device-btn" onclick="showEndpointDetails('${endpoint.id}')">
+                                📋 Detalhes
+                            </button>
+                            <button class="device-btn screenshot" onclick="requestScreenshot('${endpoint.id}')">
+                                📸 Screenshot
+                            </button>
+                        </div>
                     `;
                     container.appendChild(div);
                 });
@@ -579,6 +751,10 @@ HTML_TEMPLATE = """
             } catch (error) {
                 console.error('Error loading endpoints:', error);
             }
+        }
+        
+        function showEndpointDetails(endpointId) {
+            alert(`Detalhes do endpoint ${endpointId}\n\nFunção em desenvolvimento...`);
         }
 
         async function loadTokens() {
