@@ -91,6 +91,11 @@ def get_system_info_data(endpoint_id):
     info = store.endpoint_system_info.get(endpoint_id, {})
     return jsonify(info)
 
+@api_bp.route('/api/screenshot_request/<endpoint_id>', methods=['GET'])
+def check_screenshot_request(endpoint_id):
+    request_data = store.screenshot_requests.get(endpoint_id, {})
+    return jsonify(request_data)
+
 @api_bp.route('/api/request_screenshot/<endpoint_id>', methods=['POST'])
 @require_login
 def request_screenshot(endpoint_id):
@@ -100,6 +105,32 @@ def request_screenshot(endpoint_id):
             'timestamp': datetime.now().isoformat()
         }
     return jsonify({'status': 'success', 'message': f'Screenshot solicitado para {endpoint_id}'})
+
+@api_bp.route('/api/screenshot_data', methods=['POST'])
+def receive_screenshot():
+    data = request.get_json()
+    if not data or 'endpoint_id' not in data or 'screenshot' not in data:
+        return jsonify({'status': 'error', 'message': 'Dados inválidos'}), 400
+    
+    endpoint_id = data['endpoint_id']
+    screenshot_data = data['screenshot']
+    timestamp = data.get('timestamp', datetime.now().isoformat())
+    
+    # Armazenar screenshot
+    if endpoint_id not in store.endpoint_screenshots:
+        store.endpoint_screenshots[endpoint_id] = {}
+    
+    store.endpoint_screenshots[endpoint_id] = {
+        'screenshot': screenshot_data,
+        'timestamp': timestamp,
+        'endpoint_id': endpoint_id
+    }
+    
+    # Limpar solicitação
+    if endpoint_id in store.screenshot_requests:
+        del store.screenshot_requests[endpoint_id]
+    
+    return jsonify({'status': 'success', 'message': 'Screenshot recebido'})
 
 @api_bp.route('/api/test')
 def test_api():
