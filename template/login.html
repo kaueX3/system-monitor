@@ -3,132 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEALDADE - Login</title>
+    <title>LEALDADE</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #000000;
             min-height: 100vh;
-            color: #fff;
+            color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%);
+            z-index: -1;
+            animation: rotateBG 30s linear infinite;
+        }
+        @keyframes rotateBG {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .login-container {
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 400px;
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 16px;
+            padding: 50px 45px;
+            max-width: 420px;
             width: 100%;
-            border: 1px solid rgba(0,212,255,0.3);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .login-container:hover {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(255,255,255,0.05);
+            transform: translateY(-2px);
         }
         .logo {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         .logo h1 {
-            color: #00d4ff;
-            text-shadow: 0 0 20px rgba(0,212,255,0.5);
-            margin-bottom: 10px;
+            color: #ffffff;
+            margin-bottom: 8px;
             font-size: 2.5em;
-            font-weight: bold;
-            letter-spacing: 2px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            text-transform: uppercase;
         }
         .logo p {
-            color: #888;
-            font-size: 0.9em;
+            color: #888888;
+            font-size: 0.85em;
+            letter-spacing: 3px;
+            text-transform: uppercase;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #00d4ff;
+            margin-bottom: 10px;
+            color: #aaaaaa;
             font-weight: 500;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         .form-group input {
             width: 100%;
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 10px;
+            padding: 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
             color: #fff;
-            font-size: 1em;
+            font-size: 1.1em;
             transition: all 0.3s ease;
+            border-radius: 0;
         }
         .form-group input:focus {
             outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0,212,255,0.3);
+            border-bottom-color: #ffffff;
+            box-shadow: 0 1px 0 #ffffff;
         }
         .form-group input::placeholder {
-            color: #666;
+            color: #444444;
         }
         .login-btn {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 1.1em;
-            font-weight: bold;
+            padding: 18px;
+            background: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 1em;
+            font-weight: 700;
+            letter-spacing: 3px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            margin-top: 20px;
+            text-transform: uppercase;
         }
         .login-btn:hover {
+            background: transparent;
+            color: #ffffff;
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,212,255,0.4);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
         }
         .login-btn:active {
-            transform: translateY(0);
+            transform: translateY(1px);
         }
         .message {
             text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            border-left: 4px solid #00d4ff;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
         .message p {
-            color: #aaa;
-            font-style: italic;
-            line-height: 1.6;
+            color: #666666;
+            font-style: normal;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
         .error {
-            background: rgba(255,0,0,0.1);
-            border: 1px solid rgba(255,0,0,0.3);
-            color: #ff6b6b;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            background: transparent;
+            border: 1px solid #ff3333;
+            color: #ff3333;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
             text-align: center;
             display: none;
+            font-weight: 500;
+            font-size: 0.9em;
+            letter-spacing: 1px;
         }
         .success {
-            background: rgba(0,255,0,0.1);
-            border: 1px solid rgba(0,255,0,0.3);
-            color: #00ff00;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            background: transparent;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
             text-align: center;
             display: none;
+            font-weight: 500;
+            font-size: 0.9em;
+            letter-spacing: 1px;
         }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
         .loading {
-            animation: pulse 1.5s infinite;
+            animation: blink 1.5s infinite;
+            pointer-events: none;
+            background: transparent;
+            color: #ffffff;
         }
     </style>
 </head>
@@ -175,55 +215,48 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Resetar mensagens
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
             
-            // Adicionar estado de carregamento
             loginBtn.classList.add('loading');
-            loginBtn.textContent = 'Verificando...';
+            loginBtn.textContent = 'VERIFICANDO...';
             loginBtn.disabled = true;
             
-            // Simular verificação (em um sistema real, isso seria uma chamada API)
             setTimeout(() => {
                 if (username === 'lealdade' && password === 'lealdade') {
-                    successMsg.textContent = 'Login bem-sucedido! Redirecionando...';
+                    successMsg.textContent = 'ACESSO PERMITIDO. REDIRECIONANDO...';
                     successMsg.style.display = 'block';
                     
-                    // Redirecionar para a página principal após 2 segundos
                     setTimeout(() => {
                         window.location.href = '/dashboard';
                     }, 2000);
                 } else {
-                    errorMsg.textContent = 'Usuário ou senha incorretos!';
+                    errorMsg.textContent = 'ACESSO NEGADO.';
                     errorMsg.style.display = 'block';
                     
-                    // Resetar botão
                     loginBtn.classList.remove('loading');
                     loginBtn.textContent = 'ENTRAR';
                     loginBtn.disabled = false;
                     
-                    // Limpar campos
                     document.getElementById('password').value = '';
                     document.getElementById('password').focus();
                 }
             }, 1500);
         });
         
-        // Adicionar efeito de digitação
         document.getElementById('username').addEventListener('input', function() {
             if (this.value.length > 0) {
-                this.style.borderColor = '#00d4ff';
+                this.style.borderBottomColor = '#ffffff';
             } else {
-                this.style.borderColor = 'rgba(0,212,255,0.3)';
+                this.style.borderBottomColor = 'rgba(255,255,255,0.2)';
             }
         });
         
         document.getElementById('password').addEventListener('input', function() {
             if (this.value.length > 0) {
-                this.style.borderColor = '#00d4ff';
+                this.style.borderBottomColor = '#ffffff';
             } else {
-                this.style.borderColor = 'rgba(0,212,255,0.3)';
+                this.style.borderBottomColor = 'rgba(255,255,255,0.2)';
             }
         });
     </script>
