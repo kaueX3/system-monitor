@@ -564,7 +564,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Template do login premium roxo com animações avançadas
+# Template do login roxo/preto premium com animações cinematográficas
 LOGIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -588,7 +588,33 @@ LOGIN_TEMPLATE = """
             position: relative;
         }
         
-        /* Animação de fundo com partículas */
+        /* Gradiente de fundo roxo/preto animado */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, #2d1b69 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, #4c1d95 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, #6d28d9 0%, transparent 50%),
+                linear-gradient(135deg, #0a0014 0%, #1a0033 25%, #2d1b69 50%, #1a0033 75%, #0a0014 100%);
+            background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+            animation: gradientShift 20s ease infinite;
+            opacity: 0.8;
+            z-index: 0;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%, 100% 50%, 50% 100%, 0% 50%; }
+            25% { background-position: 50% 0%, 0% 100%, 100% 0%, 50% 0%; }
+            50% { background-position: 100% 50%, 50% 0%, 0% 50%, 100% 50%; }
+            75% { background-position: 50% 100%, 100% 0%, 50% 100%, 50% 100%; }
+            100% { background-position: 0% 50%, 100% 50%, 50% 100%, 0% 50%; }
+        }
+        
+        /* Sistema de partículas avançado */
         .particles {
             position: fixed;
             top: 0;
@@ -601,197 +627,329 @@ LOGIN_TEMPLATE = """
         
         .particle {
             position: absolute;
+            border-radius: 50%;
+            animation: float 25s infinite linear;
+        }
+        
+        .particle.small {
+            width: 2px;
+            height: 2px;
+            background: #9333ea;
+            box-shadow: 0 0 6px #9333ea;
+        }
+        
+        .particle.medium {
             width: 4px;
             height: 4px;
-            background: #9333ea;
-            border-radius: 50%;
-            animation: float 20s infinite linear;
-            box-shadow: 0 0 10px #9333ea;
+            background: #8b5cf6;
+            box-shadow: 0 0 10px #8b5cf6;
+        }
+        
+        .particle.large {
+            width: 6px;
+            height: 6px;
+            background: #7c3aed;
+            box-shadow: 0 0 15px #7c3aed;
         }
         
         @keyframes float {
-            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
+            0% { transform: translateY(100vh) rotate(0deg) scale(0); opacity: 0; }
+            10% { opacity: 1; transform: scale(1); }
             90% { opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+            100% { transform: translateY(-100vh) rotate(1080deg) scale(0); opacity: 0; }
         }
         
-        /* Gradiente animado de fundo */
-        .gradient-bg {
+        /* Grid hexagonal animado */
+        .hex-grid {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, #1a0033, #2d1b69, #4c1d95, #5b21b6, #6d28d9, #7c3aed, #8b5cf6, #9333ea);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            opacity: 0.3;
-            z-index: 0;
+            background-image: 
+                linear-gradient(30deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
+                linear-gradient(150deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
+                linear-gradient(30deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
+                linear-gradient(150deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
+                linear-gradient(60deg, rgba(139, 92, 246, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(139, 92, 246, 0.05) 75%, rgba(139, 92, 246, 0.05)),
+                linear-gradient(60deg, rgba(139, 92, 246, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(139, 92, 246, 0.05) 75%, rgba(139, 92, 246, 0.05));
+            background-size: 80px 140px;
+            background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+            animation: hexMove 10s linear infinite;
+            z-index: 1;
         }
         
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes hexMove {
+            0% { background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px; }
+            100% { background-position: 80px 0, 80px 0, 120px 70px, 120px 70px, 80px 0, 120px 70px; }
         }
         
-        /* Container principal com glassmorphism */
+        /* Container principal com glassmorphism avançado */
         .login-container {
-            background: rgba(139, 92, 246, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            padding: 50px;
-            max-width: 450px;
+            background: rgba(10, 0, 20, 0.85);
+            backdrop-filter: blur(25px) saturate(180%);
+            border-radius: 35px;
+            padding: 60px;
+            max-width: 500px;
             width: 100%;
-            border: 2px solid rgba(139, 92, 246, 0.3);
+            border: 2px solid rgba(139, 92, 246, 0.4);
             box-shadow: 
-                0 8px 32px rgba(139, 92, 246, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 100px rgba(139, 92, 246, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
             position: relative;
             z-index: 10;
-            animation: slideInUp 0.8s ease-out;
+            animation: containerEntrance 1.2s cubic-bezier(0.4, 0, 0.2, 1);
             transform-origin: center;
         }
         
-        @keyframes slideInUp {
-            from { 
+        @keyframes containerEntrance {
+            0% { 
                 opacity: 0; 
-                transform: translateY(50px) scale(0.9); 
+                transform: translateY(100px) scale(0.8) rotateX(15deg); 
+                filter: blur(20px);
             }
-            to { 
+            50% {
+                opacity: 0.8;
+                transform: translateY(-20px) scale(1.05) rotateX(0deg);
+                filter: blur(5px);
+            }
+            100% { 
                 opacity: 1; 
-                transform: translateY(0) scale(1); 
+                transform: translateY(0) scale(1) rotateX(0deg); 
+                filter: blur(0px);
             }
         }
         
-        /* Efeito de brilho ao redor do container */
+        /* Aura animada ao redor do container */
         .login-container::before {
             content: '';
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #9333ea, #8b5cf6, #7c3aed, #6d28d9, #5b21b6, #4c1d95);
-            border-radius: 30px;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(
+                45deg, 
+                #9333ea, 
+                #8b5cf6, 
+                #7c3aed, 
+                #6d28d9, 
+                #5b21b6, 
+                #4c1d95,
+                #9333ea
+            );
+            border-radius: 35px;
             z-index: -1;
-            opacity: 0.7;
-            animation: borderGlow 3s ease-in-out infinite alternate;
+            opacity: 0.8;
+            animation: borderAura 4s ease-in-out infinite;
+            background-size: 300% 300%;
         }
         
-        @keyframes borderGlow {
-            from { opacity: 0.5; filter: blur(10px); }
-            to { opacity: 1; filter: blur(0px); }
+        @keyframes borderAura {
+            0%, 100% { 
+                opacity: 0.6; 
+                filter: blur(15px) brightness(1.2);
+                background-position: 0% 50%;
+            }
+            50% { 
+                opacity: 1; 
+                filter: blur(0px) brightness(1.5);
+                background-position: 100% 50%;
+            }
         }
         
-        /* Logo com animação */
+        /* Logo com animações cinematográficas */
         .logo {
             text-align: center;
-            margin-bottom: 40px;
-            animation: logoGlow 2s ease-in-out infinite alternate;
+            margin-bottom: 45px;
+            position: relative;
+            animation: logoFloat 4s ease-in-out infinite;
         }
         
-        @keyframes logoGlow {
-            from { filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.5)); }
-            to { filter: drop-shadow(0 0 30px rgba(147, 51, 234, 0.8)); }
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.02); }
         }
         
         .logo h1 {
-            font-size: 3.5em;
+            font-size: 4em;
             font-weight: 900;
-            background: linear-gradient(135deg, #9333ea, #8b5cf6, #7c3aed, #6d28d9);
+            background: linear-gradient(
+                135deg, 
+                #9333ea 0%, 
+                #8b5cf6 20%, 
+                #7c3aed 40%, 
+                #6d28d9 60%, 
+                #5b21b6 80%, 
+                #4c1d95 100%
+            );
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 0 40px rgba(147, 51, 234, 0.5);
-            letter-spacing: 3px;
-            margin-bottom: 10px;
-            animation: textShimmer 3s ease-in-out infinite;
+            text-shadow: 
+                0 0 60px rgba(147, 51, 234, 0.8),
+                0 0 120px rgba(139, 92, 246, 0.4);
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            animation: textGlow 3s ease-in-out infinite alternate;
+            position: relative;
         }
         
-        @keyframes textShimmer {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+        @keyframes textGlow {
+            from { 
+                filter: brightness(1) drop-shadow(0 0 20px rgba(147, 51, 234, 0.8));
+                transform: scale(1);
+            }
+            to { 
+                filter: brightness(1.3) drop-shadow(0 0 40px rgba(147, 51, 234, 1));
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Partículas ao redor do logo */
+        .logo-particles {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200%;
+            height: 200%;
+            pointer-events: none;
+        }
+        
+        .logo-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #9333ea;
+            border-radius: 50%;
+            animation: orbitParticle 6s linear infinite;
+        }
+        
+        @keyframes orbitParticle {
+            0% { transform: rotate(0deg) translateX(100px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); opacity: 0; }
         }
         
         .logo p {
             color: #a78bfa;
-            font-size: 1.1em;
+            font-size: 1.2em;
             font-weight: 300;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
             opacity: 0.9;
+            text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+            animation: subtitlePulse 2s ease-in-out infinite alternate;
         }
         
-        /* Formulário com animações */
+        @keyframes subtitlePulse {
+            from { opacity: 0.7; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.05); }
+        }
+        
+        /* Formulário com efeitos holográficos */
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             position: relative;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             color: #e9d5ff;
             font-weight: 600;
             font-size: 0.95em;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: 0 0 10px rgba(233, 213, 255, 0.3);
         }
         
         .form-group input {
             width: 100%;
-            padding: 18px 20px;
-            background: rgba(139, 92, 246, 0.05);
-            border: 2px solid rgba(139, 92, 246, 0.2);
-            border-radius: 15px;
+            padding: 22px 25px;
+            background: rgba(26, 0, 51, 0.6);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
             color: #fff;
             font-size: 1.1em;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            backdrop-filter: blur(10px);
         }
         
         .form-group input:focus {
             outline: none;
             border-color: #9333ea;
-            background: rgba(139, 92, 246, 0.1);
+            background: rgba(45, 27, 105, 0.4);
             box-shadow: 
-                0 0 20px rgba(147, 51, 234, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+                0 0 30px rgba(147, 51, 234, 0.5),
+                0 0 60px rgba(147, 51, 234, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px) scale(1.02);
         }
         
         .form-group input::placeholder {
             color: #6b7280;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
         }
         
         .form-group input:focus::placeholder {
-            opacity: 0.5;
+            opacity: 0.3;
+            transform: translateX(5px);
         }
         
-        /* Botão premium com múltiplas animações */
+        /* Efeito de onda ao digitar */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(147, 51, 234, 0.3);
+            transform: scale(0);
+            animation: rippleEffect 0.6s ease-out;
+            pointer-events: none;
+        }
+        
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        /* Botão premium com animações cinematográficas */
         .login-btn {
             width: 100%;
-            padding: 20px;
-            background: linear-gradient(135deg, #9333ea, #8b5cf6, #7c3aed);
+            padding: 24px;
+            background: linear-gradient(
+                135deg, 
+                #9333ea 0%, 
+                #8b5cf6 25%, 
+                #7c3aed 50%, 
+                #6d28d9 75%, 
+                #5b21b6 100%
+            );
             border: none;
-            border-radius: 15px;
+            border-radius: 20px;
             color: #fff;
-            font-size: 1.2em;
-            font-weight: 700;
+            font-size: 1.3em;
+            font-weight: 800;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 20px;
+            letter-spacing: 3px;
+            margin-top: 25px;
             position: relative;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 10px 40px rgba(147, 51, 234, 0.4),
+                0 0 80px rgba(147, 51, 234, 0.2);
         }
         
+        /* Efeito de brilho passando pelo botão */
         .login-btn::before {
             content: '';
             position: absolute;
@@ -799,152 +957,318 @@ LOGIN_TEMPLATE = """
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.6s ease;
+            background: linear-gradient(
+                90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.4), 
+                transparent
+            );
+            transition: left 0.8s ease;
+        }
+        
+        .login-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                45deg, 
+                transparent 30%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 70%
+            );
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
         }
         
         .login-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 30px rgba(147, 51, 234, 0.5);
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 
+                0 15px 50px rgba(147, 51, 234, 0.6),
+                0 0 100px rgba(147, 51, 234, 0.3);
         }
         
         .login-btn:hover::before {
             left: 100%;
         }
         
-        .login-btn:active {
-            transform: translateY(-1px) scale(0.98);
+        .login-btn:hover::after {
+            transform: translateX(100%);
         }
         
-        /* Estados de loading e feedback */
+        .login-btn:active {
+            transform: translateY(-2px) scale(1.01);
+        }
+        
+        /* Estados de loading avançados */
         .login-btn.loading {
-            animation: btnPulse 1.5s infinite;
+            animation: btnLoading 2s infinite;
             pointer-events: none;
         }
         
-        @keyframes btnPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
+        @keyframes btnLoading {
+            0%, 100% { 
+                transform: scale(1); 
+                background: linear-gradient(135deg, #7c3aed, #6d28d9, #5b21b6);
+            }
+            25% { 
+                transform: scale(1.05); 
+                background: linear-gradient(135deg, #8b5cf6, #7c3aed, #6d28d9);
+            }
+            50% { 
+                transform: scale(1.02); 
+                background: linear-gradient(135deg, #9333ea, #8b5cf6, #7c3aed);
+            }
+            75% { 
+                transform: scale(1.05); 
+                background: linear-gradient(135deg, #a855f7, #9333ea, #8b5cf6);
+            }
         }
         
-        /* Mensagens com animações suaves */
+        /* Mensagens com animações premium */
         .message {
             text-align: center;
-            margin-top: 35px;
-            padding: 25px;
-            background: rgba(139, 92, 246, 0.1);
-            border-radius: 15px;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(26, 0, 51, 0.6);
+            border-radius: 20px;
             border-left: 4px solid #9333ea;
-            backdrop-filter: blur(10px);
-            animation: fadeInScale 0.6s ease-out;
+            backdrop-filter: blur(15px);
+            animation: messageEntrance 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
         
-        @keyframes fadeInScale {
+        .message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #9333ea, transparent);
+            animation: messageScan 3s linear infinite;
+        }
+        
+        @keyframes messageScan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        @keyframes messageEntrance {
             from { 
                 opacity: 0; 
-                transform: scale(0.9); 
+                transform: translateY(30px) scale(0.9); 
             }
             to { 
                 opacity: 1; 
-                transform: scale(1); 
+                transform: translateY(0) scale(1); 
             }
         }
         
         .message p {
             color: #c4b5fd;
             font-style: italic;
-            line-height: 1.8;
-            font-size: 0.95em;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.9;
+            font-size: 1em;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
         }
         
         .error, .success {
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
             display: none;
-            animation: slideDown 0.4s ease-out;
+            animation: alertSlide 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
         
-        @keyframes slideDown {
+        @keyframes alertSlide {
             from { 
                 opacity: 0; 
-                transform: translateY(-20px); 
+                transform: translateY(-30px) scale(0.8); 
             }
             to { 
                 opacity: 1; 
-                transform: translateY(0); 
+                transform: translateY(0) scale(1); 
             }
         }
         
         .error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(127, 29, 29, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.4);
             color: #fca5a5;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+            box-shadow: 
+                0 0 30px rgba(239, 68, 68, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
         .success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            background: rgba(20, 83, 45, 0.2);
+            border: 2px solid rgba(34, 197, 94, 0.4);
             color: #86efac;
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+            box-shadow: 
+                0 0 30px rgba(34, 197, 94, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
-        /* Efeito de digitação animado */
+        /* Indicadores de digitação avançados */
         .typing-indicator {
             position: absolute;
-            right: 20px;
+            right: 25px;
             top: 50%;
             transform: translateY(-50%);
             display: none;
+            gap: 3px;
         }
         
         .typing-indicator.active {
-            display: block;
+            display: flex;
         }
         
         .typing-indicator span {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: #9333ea;
-            margin: 0 2px;
-            animation: typingBounce 1.4s infinite;
+            background: linear-gradient(135deg, #9333ea, #8b5cf6);
+            animation: typingBounce 1.2s infinite;
+            box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
         }
         
         .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
         .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
         
         @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
+            0%, 60%, 100% { 
+                transform: translateY(0) scale(1); 
+                opacity: 1;
+            }
+            30% { 
+                transform: translateY(-12px) scale(1.2); 
+                opacity: 0.8;
+            }
+        }
+        
+        /* Efeito de brilho nos inputs */
+        .input-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            background: linear-gradient(45deg, transparent, rgba(147, 51, 234, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .form-group input:focus + .input-glow {
+            opacity: 1;
+            animation: inputGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes inputGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
         }
         
         /* Responsive design */
         @media (max-width: 480px) {
             .login-container {
-                padding: 30px 25px;
+                padding: 40px 30px;
                 margin: 20px;
             }
             
             .logo h1 {
-                font-size: 2.5em;
+                font-size: 3em;
+            }
+            
+            .form-group input {
+                padding: 18px 20px;
+            }
+            
+            .login-btn {
+                padding: 20px;
+                font-size: 1.1em;
+            }
+        }
+        
+        /* Animações de sucesso */
+        .success-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .success-circle {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #22c55e;
+            border-radius: 50%;
+            animation: successCircle 1s ease-out;
+        }
+        
+        @keyframes successCircle {
+            0% { 
+                transform: scale(0); 
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: scale(1.5); 
+                opacity: 0;
+            }
+        }
+        
+        .success-checkmark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            animation: checkmarkAppear 0.5s ease-out 0.3s both;
+        }
+        
+        @keyframes checkmarkAppear {
+            0% { 
+                transform: translate(-50%, -50%) scale(0) rotate(-45deg); 
+                opacity: 0;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1) rotate(0deg); 
+                opacity: 1;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Fundo animado -->
+    <!-- Fundos animados -->
     <div class="gradient-bg"></div>
+    <div class="hex-grid"></div>
     <div class="particles" id="particles"></div>
     
     <!-- Container principal -->
     <div class="login-container">
         <div class="logo">
+            <div class="logo-particles" id="logoParticles"></div>
             <h1>LEALDADE</h1>
             <p>Portal Exclusivo</p>
         </div>
@@ -956,6 +1280,7 @@ LOGIN_TEMPLATE = """
             <div class="form-group">
                 <label for="username">Usuário</label>
                 <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
+                <div class="input-glow"></div>
                 <div class="typing-indicator" id="usernameTyping">
                     <span></span><span></span><span></span>
                 </div>
@@ -964,6 +1289,7 @@ LOGIN_TEMPLATE = """
             <div class="form-group">
                 <label for="password">Senha</label>
                 <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+                <div class="input-glow"></div>
                 <div class="typing-indicator" id="passwordTyping">
                     <span></span><span></span><span></span>
                 </div>
@@ -980,23 +1306,38 @@ LOGIN_TEMPLATE = """
     </div>
 
     <script>
-        // Criar partículas animadas
-        function createParticles() {
+        // Criar partículas avançadas
+        function createAdvancedParticles() {
             const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
+            const particleCount = 80;
             
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
-                particle.className = 'particle';
+                const size = Math.random() > 0.7 ? 'large' : Math.random() > 0.4 ? 'medium' : 'small';
+                particle.className = `particle ${size}`;
                 particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particle.style.animationDelay = Math.random() * 25 + 's';
+                particle.style.animationDuration = (20 + Math.random() * 15) + 's';
                 particlesContainer.appendChild(particle);
             }
         }
         
+        // Criar partículas orbitais do logo
+        function createLogoParticles() {
+            const logoParticles = document.getElementById('logoParticles');
+            const particleCount = 8;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'logo-particle';
+                particle.style.animationDelay = (i * 0.75) + 's';
+                logoParticles.appendChild(particle);
+            }
+        }
+        
         // Inicializar partículas
-        createParticles();
+        createAdvancedParticles();
+        createLogoParticles();
         
         // Elementos do formulário
         const loginForm = document.getElementById('loginForm');
@@ -1009,35 +1350,68 @@ LOGIN_TEMPLATE = """
         const usernameTyping = document.getElementById('usernameTyping');
         const passwordTyping = document.getElementById('passwordTyping');
         
-        // Efeito de digitação
-        usernameInput.addEventListener('input', function() {
+        // Efeito de ripple nos inputs
+        function createRipple(element, event) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            
+            const rect = element.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = event.clientX - rect.left - size / 2;
+            const y = event.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            element.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        }
+        
+        // Efeitos de digitação avançados
+        usernameInput.addEventListener('input', function(e) {
             if (this.value.length > 0) {
                 this.style.borderColor = '#9333ea';
-                this.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.3)';
+                this.style.boxShadow = '0 0 30px rgba(147, 51, 234, 0.5)';
                 usernameTyping.classList.add('active');
-                setTimeout(() => usernameTyping.classList.remove('active'), 1000);
+                setTimeout(() => usernameTyping.classList.remove('active'), 1200);
+                
+                // Efeito de brilho progressivo
+                const progress = Math.min(this.value.length / 10, 1);
+                this.style.background = `rgba(45, 27, 105, ${0.4 + progress * 0.2})`;
             } else {
-                this.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                this.style.borderColor = 'rgba(139, 92, 246, 0.3)';
                 this.style.boxShadow = 'none';
+                this.style.background = 'rgba(26, 0, 51, 0.6)';
             }
         });
         
-        passwordInput.addEventListener('input', function() {
+        passwordInput.addEventListener('input', function(e) {
             if (this.value.length > 0) {
                 this.style.borderColor = '#9333ea';
-                this.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.3)';
+                this.style.boxShadow = '0 0 30px rgba(147, 51, 234, 0.5)';
                 passwordTyping.classList.add('active');
-                setTimeout(() => passwordTyping.classList.remove('active'), 1000);
+                setTimeout(() => passwordTyping.classList.remove('active'), 1200);
+                
+                // Efeito de brilho progressivo
+                const progress = Math.min(this.value.length / 10, 1);
+                this.style.background = `rgba(45, 27, 105, ${0.4 + progress * 0.2})`;
             } else {
-                this.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                this.style.borderColor = 'rgba(139, 92, 246, 0.3)';
                 this.style.boxShadow = 'none';
+                this.style.background = 'rgba(26, 0, 51, 0.6)';
             }
         });
         
-        // Animação de foco nos inputs
+        // Efeito de ripple ao clicar nos inputs
         [usernameInput, passwordInput].forEach(input => {
+            input.addEventListener('click', function(e) {
+                createRipple(this.parentElement, e);
+            });
+            
             input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transform = 'scale(1.03)';
             });
             
             input.addEventListener('blur', function() {
@@ -1045,7 +1419,7 @@ LOGIN_TEMPLATE = """
             });
         });
         
-        // Envio do formulário
+        // Envio do formulário com animações cinematográficas
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -1056,86 +1430,118 @@ LOGIN_TEMPLATE = """
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
             
-            // Estado de loading
+            // Estado de loading avançado
             loginBtn.classList.add('loading');
             btnText.textContent = 'VERIFICANDO...';
             loginBtn.disabled = true;
             
-            // Adicionar efeito de ondulação no botão
-            loginBtn.style.background = 'linear-gradient(135deg, #7c3aed, #6d28d9, #5b21b6)';
+            // Adicionar efeito de pulsação no container
+            document.querySelector('.login-container').style.animation = 'containerPulse 1s ease-in-out';
             
             // Simular verificação com animação
             setTimeout(() => {
                 if (username === 'lealdade' && password === 'lealdade') {
-                    // Sucesso
-                    successMsg.textContent = '✨ Login bem-sucedido! Redirecionando para o portal...';
+                    // Sucesso espetacular
+                    successMsg.textContent = '✨ Acesso concedido! Bem-vindo ao portal exclusivo...';
                     successMsg.style.display = 'block';
                     
                     // Mudar cor do botão para sucesso
                     loginBtn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a, #15803d)';
-                    btnText.textContent = '✓ ACESSO CONCEDIDO';
+                    btnText.textContent = '✓ ACESSO LIBERADO';
                     
-                    // Efeito de confete visual
-                    createConfetti();
+                    // Criar animação de sucesso
+                    createSuccessAnimation();
                     
-                    // Redirecionar após 2.5 segundos
+                    // Efeito de confete avançado
+                    createAdvancedConfetti();
+                    
+                    // Redirecionar após 3 segundos
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 2500);
+                        document.querySelector('.login-container').style.animation = 'containerExit 1s ease-in forwards';
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 800);
+                    }, 3000);
                 } else {
-                    // Erro
-                    errorMsg.textContent = '❌ Credenciais incorretas! Verifique usuário e senha.';
+                    // Erro dramático
+                    errorMsg.textContent = '❌ Credenciais inválidas! Acesso negado ao sistema.';
                     errorMsg.style.display = 'block';
                     
                     // Resetar botão com animação
                     loginBtn.classList.remove('loading');
-                    btnText.textContent = 'TENTAR NOVAMENTE';
-                    loginBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626, #b91c1c)';
+                    btnText.textContent = 'ACESSO NEGADO';
+                    loginBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c, #991b1b)';
+                    
+                    // Efeito de shake dramático
+                    document.querySelector('.login-container').style.animation = 'dramaticShake 0.8s ease-out';
                     
                     setTimeout(() => {
                         loginBtn.style.background = 'linear-gradient(135deg, #9333ea, #8b5cf6, #7c3aed)';
-                        btnText.textContent = 'ENTRAR';
+                        btnText.textContent = 'TENTAR NOVAMENTE';
                         loginBtn.disabled = false;
-                    }, 2000);
+                        document.querySelector('.login-container').style.animation = '';
+                    }, 2500);
                     
                     // Limpar senha e focar
                     passwordInput.value = '';
                     passwordInput.focus();
                     
-                    // Adicionar efeito de shake no container
-                    document.querySelector('.login-container').style.animation = 'shake 0.5s';
-                    setTimeout(() => {
-                        document.querySelector('.login-container').style.animation = '';
-                    }, 500);
+                    // Efeito de erro nos inputs
+                    [usernameInput, passwordInput].forEach(input => {
+                        input.style.borderColor = '#dc2626';
+                        input.style.boxShadow = '0 0 30px rgba(220, 38, 38, 0.5)';
+                        setTimeout(() => {
+                            input.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                            input.style.boxShadow = 'none';
+                        }, 2000);
+                    });
                 }
-            }, 2000);
+            }, 2500);
         });
         
-        // Efeito de confete para sucesso
-        function createConfetti() {
-            const colors = ['#9333ea', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6'];
-            const confettiCount = 30;
+        // Animação de confete avançado
+        function createAdvancedConfetti() {
+            const colors = ['#9333ea', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#22c55e', '#16a34a'];
+            const confettiCount = 50;
             
             for (let i = 0; i < confettiCount; i++) {
                 const confetti = document.createElement('div');
                 confetti.style.position = 'fixed';
-                confetti.style.width = '10px';
-                confetti.style.height = '10px';
+                confetti.style.width = Math.random() * 12 + 8 + 'px';
+                confetti.style.height = confetti.style.width;
                 confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.top = '-10px';
-                confetti.style.borderRadius = '50%';
+                confetti.style.top = '-20px';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%';
                 confetti.style.zIndex = '9999';
                 confetti.style.pointerEvents = 'none';
+                confetti.style.boxShadow = `0 0 10px ${confetti.style.background}`;
                 document.body.appendChild(confetti);
                 
-                // Animação de queda
-                const duration = 2000 + Math.random() * 1000;
-                const rotation = Math.random() * 360;
+                // Animação de queda realista
+                const duration = 2000 + Math.random() * 1500;
+                const rotation = Math.random() * 720;
+                const sway = (Math.random() - 0.5) * 200;
                 
                 confetti.animate([
-                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
-                    { transform: `translateY(100vh) rotate(${rotation}deg)`, opacity: 0 }
+                    { 
+                        transform: 'translateY(0) translateX(0) rotate(0deg) scale(0)', 
+                        opacity: 0 
+                    },
+                    { 
+                        transform: 'translateY(20vh) translateX(0) rotate(180deg) scale(1)', 
+                        opacity: 1,
+                        offset: 0.1
+                    },
+                    { 
+                        transform: `translateY(100vh) translateX(${sway}px) rotate(${rotation}deg) scale(0.8)`, 
+                        opacity: 0.8,
+                        offset: 0.9
+                    },
+                    { 
+                        transform: `translateY(110vh) translateX(${sway * 1.5}px) rotate(${rotation}deg) scale(0)`, 
+                        opacity: 0 
+                    }
                 ], {
                     duration: duration,
                     easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
@@ -1145,24 +1551,65 @@ LOGIN_TEMPLATE = """
             }
         }
         
-        // Adicionar animação de shake ao CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
+        // Animação de sucesso
+        function createSuccessAnimation() {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-animation';
+            successDiv.innerHTML = `
+                <div class="success-circle"></div>
+                <svg class="success-checkmark" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3">
+                    <path d="M5 12l5 5L20 7"/>
+                </svg>
+            `;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => successDiv.remove(), 1500);
+        }
+        
+        // Adicionar animações CSS dinâmicas
+        const dynamicStyles = document.createElement('style');
+        dynamicStyles.textContent = `
+            @keyframes containerPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+            }
+            
+            @keyframes dramaticShake {
                 0%, 100% { transform: translateX(0); }
-                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                20%, 40%, 60%, 80% { transform: translateX(5px); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+                20%, 40%, 60%, 80% { transform: translateX(8px); }
+            }
+            
+            @keyframes containerExit {
+                0% { 
+                    opacity: 1; 
+                    transform: scale(1) rotateX(0deg); 
+                    filter: blur(0px);
+                }
+                100% { 
+                    opacity: 0; 
+                    transform: scale(0.8) rotateX(15deg); 
+                    filter: blur(20px);
+                }
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(dynamicStyles);
         
         // Efeito de hover no logo
         document.querySelector('.logo').addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.05)';
+            this.style.transform = 'translateY(-15px) scale(1.05)';
         });
         
         document.querySelector('.logo').addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+        
+        // Efeito parallax sutil no mouse move
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            
+            document.querySelector('.login-container').style.transform = `translateX(${x}px) translateY(${y}px)`;
         });
     </script>
 </body>
