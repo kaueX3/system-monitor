@@ -51,12 +51,13 @@ HTML_TEMPLATE = """
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { 
-            font-size: 3em; 
-            margin-bottom: 10px; 
+            font-size: 2.5em; 
+            margin-bottom: 15px; 
             background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
+            letter-spacing: 2px;
         }
         .header p { color: #9ca3af; font-size: 1.1rem; }
         
