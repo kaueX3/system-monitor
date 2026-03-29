@@ -329,26 +329,23 @@ HTML_TEMPLATE = """
         
         .tabs-container { 
             display: flex; 
-            margin-bottom: 30px;
-            background: rgba(17, 17, 27, 0.6);
-            border-radius: 12px;
-            padding: 5px;
+            gap: 2px; 
+            margin-bottom: 30px; 
+            background: rgba(124, 58, 237, 0.1); 
         }
         .tab { 
-            background: transparent; 
+            padding: 12px 20px; 
+            background: rgba(124, 58, 237, 0.1); 
             color: #9ca3af; 
-            border: none; 
-            padding: 15px 25px; 
+            border: none;
+            border-radius: 0px;
             cursor: pointer;
-            border-radius: 8px;
-            font-size: 0.95rem;
             transition: all 0.3s ease;
-            flex: 1;
+            font-weight: 500;
         }
         .tab.active { 
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+            background: rgba(124, 58, 237, 0.3); 
+            color: #f3f4f6; 
         }
         .tab:hover:not(.active) { background: rgba(124, 58, 237, 0.1); }
         .tab-content { display: none; }
@@ -362,7 +359,7 @@ HTML_TEMPLATE = """
         .card {
             background: rgba(17, 17, 27, 0.9);
             border: 1px solid rgba(124, 58, 237, 0.2);
-            border-radius: 12px; 
+            border-radius: 0px; 
             padding: 20px;
             transition: transform 0.2s ease;
         }
@@ -389,7 +386,7 @@ HTML_TEMPLATE = """
         .token-card, .cookie-card, .password-card {
             background: rgba(168, 85, 247, 0.1);
             border: 1px solid rgba(168, 85, 247, 0.2);
-            border-radius: 8px;
+            border-radius: 0px;
             padding: 12px;
             margin: 8px 0;
             font-family: 'Courier New', monospace;
@@ -398,7 +395,7 @@ HTML_TEMPLATE = """
         }
         .screenshot-img {
             max-width: 100%;
-            border-radius: 12px;
+            border-radius: 0px;
             border: 2px solid rgba(124, 58, 237, 0.3);
         }
         .empty-state {
@@ -416,7 +413,7 @@ HTML_TEMPLATE = """
             border: none;
             width: 60px;
             height: 60px;
-            border-radius: 50%;
+            border-radius: 0px;
             cursor: pointer;
             font-size: 24px;
             box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
@@ -429,7 +426,7 @@ HTML_TEMPLATE = """
         .data-section {
             background: rgba(10, 10, 15, 0.6);
             border: 1px solid rgba(124, 58, 237, 0.2);
-            border-radius: 12px;
+            border-radius: 0px;
             padding: 20px;
             margin-bottom: 20px;
         }
@@ -518,14 +515,14 @@ HTML_TEMPLATE = """
             <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Dados</h2>
             <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('tokens')">🔑 Tokens</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('emails')">📧 Emails</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('passwords')">🔒 Senhas</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('cookies')">🍪 Cookies</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('history')">📜 Histórico</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('wifi')">� WiFi</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('system')">⚙️ Sistema</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('files')">📁 Arquivos</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('tokens')">🔑 Tokens</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('emails')">📧 Emails</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('passwords')">🔒 Senhas</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('cookies')">🍪 Cookies</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('history')">📜 Histórico</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('wifi')">📶 WiFi</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('system')">⚙️ Sistema</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('files')">📁 Arquivos</button>
                 </div>
                 
                 <div id="dataContent" style="min-height: 400px;">
@@ -820,7 +817,7 @@ HTML_TEMPLATE = """
                         <p><strong>RAM:</strong> ${endpoint.ram}</p>
                         <p><strong>Status:</strong> 🟢 Online</p>
                         <p><strong>Visto:</strong> ${endpoint.last_seen}</p>
-                        <button class="tab" style="margin-top: 15px; padding: 8px 16px; background: linear-gradient(135deg, #7c3aed, #6b21a8); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showDeviceData('${endpoint.id}')">� Dados</button>
+                        <button class="tab" style="margin-top: 15px; padding: 8px 16px; background: linear-gradient(135deg, #7c3aed, #6b21a8); color: white; border: none; border-radius: 0px; cursor: pointer;" onclick="showDeviceData('${endpoint.id}')">📊 Dados</button>
                     `;
                     container.appendChild(div);
                 });
