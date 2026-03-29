@@ -577,7 +577,7 @@ LOGIN_TEMPLATE = """
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0014;
+            background: #000000;
             min-height: 100vh;
             color: #fff;
             display: flex;
@@ -586,9 +586,31 @@ LOGIN_TEMPLATE = """
             padding: 20px;
             overflow: hidden;
             position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
         }
         
-        /* Gradiente de fundo roxo/preto animado */
+        /* Prevenir seleção em todos os elementos */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        /* Permitir seleção apenas em inputs */
+        input, input * {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+        }
+        
+        /* Gradiente de fundo preto com detalhes roxos */
         .gradient-bg {
             position: fixed;
             top: 0;
@@ -596,13 +618,13 @@ LOGIN_TEMPLATE = """
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 20% 80%, #2d1b69 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, #4c1d95 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, #6d28d9 0%, transparent 50%),
-                linear-gradient(135deg, #0a0014 0%, #1a0033 25%, #2d1b69 50%, #1a0033 75%, #0a0014 100%);
+                radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+                linear-gradient(135deg, #000000 0%, #0a0014 25%, #000000 50%, #0a0014 75%, #000000 100%);
             background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
-            animation: gradientShift 20s ease infinite;
-            opacity: 0.8;
+            animation: gradientShift 25s ease infinite;
+            opacity: 0.9;
             z-index: 0;
         }
         
@@ -628,28 +650,28 @@ LOGIN_TEMPLATE = """
         .particle {
             position: absolute;
             border-radius: 50%;
-            animation: float 25s infinite linear;
+            animation: float 30s infinite linear;
         }
         
         .particle.small {
             width: 2px;
             height: 2px;
-            background: #9333ea;
-            box-shadow: 0 0 6px #9333ea;
+            background: rgba(147, 51, 234, 0.8);
+            box-shadow: 0 0 8px rgba(147, 51, 234, 0.6);
         }
         
         .particle.medium {
             width: 4px;
             height: 4px;
-            background: #8b5cf6;
-            box-shadow: 0 0 10px #8b5cf6;
+            background: rgba(139, 92, 246, 0.7);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
         }
         
         .particle.large {
             width: 6px;
             height: 6px;
-            background: #7c3aed;
-            box-shadow: 0 0 15px #7c3aed;
+            background: rgba(124, 58, 237, 0.6);
+            box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
         }
         
         @keyframes float {
@@ -659,7 +681,7 @@ LOGIN_TEMPLATE = """
             100% { transform: translateY(-100vh) rotate(1080deg) scale(0); opacity: 0; }
         }
         
-        /* Grid hexagonal animado */
+        /* Grid hexagonal animado sutil */
         .hex-grid {
             position: fixed;
             top: 0;
@@ -667,15 +689,15 @@ LOGIN_TEMPLATE = """
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(30deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
-                linear-gradient(150deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
-                linear-gradient(30deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
-                linear-gradient(150deg, rgba(147, 51, 234, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.1) 87.5%, rgba(147, 51, 234, 0.1)),
-                linear-gradient(60deg, rgba(139, 92, 246, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(139, 92, 246, 0.05) 75%, rgba(139, 92, 246, 0.05)),
-                linear-gradient(60deg, rgba(139, 92, 246, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(139, 92, 246, 0.05) 75%, rgba(139, 92, 246, 0.05));
+                linear-gradient(30deg, rgba(147, 51, 234, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.05) 87.5%, rgba(147, 51, 234, 0.05)),
+                linear-gradient(150deg, rgba(147, 51, 234, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.05) 87.5%, rgba(147, 51, 234, 0.05)),
+                linear-gradient(30deg, rgba(147, 51, 234, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.05) 87.5%, rgba(147, 51, 234, 0.05)),
+                linear-gradient(150deg, rgba(147, 51, 234, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(147, 51, 234, 0.05) 87.5%, rgba(147, 51, 234, 0.05)),
+                linear-gradient(60deg, rgba(139, 92, 246, 0.02) 25%, transparent 25.5%, transparent 75%, rgba(139, 92, 246, 0.02) 75%, rgba(139, 92, 246, 0.02)),
+                linear-gradient(60deg, rgba(139, 92, 246, 0.02) 25%, transparent 25.5%, transparent 75%, rgba(139, 92, 246, 0.02) 75%, rgba(139, 92, 246, 0.02));
             background-size: 80px 140px;
             background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
-            animation: hexMove 10s linear infinite;
+            animation: hexMove 15s linear infinite;
             z-index: 1;
         }
         
@@ -684,20 +706,20 @@ LOGIN_TEMPLATE = """
             100% { background-position: 80px 0, 80px 0, 120px 70px, 120px 70px, 80px 0, 120px 70px; }
         }
         
-        /* Container principal com glassmorphism avançado */
+        /* Container principal com glassmorphism preto */
         .login-container {
-            background: rgba(10, 0, 20, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(25px) saturate(180%);
             border-radius: 35px;
             padding: 60px;
             max-width: 500px;
             width: 100%;
-            border: 2px solid rgba(139, 92, 246, 0.4);
+            border: 2px solid rgba(147, 51, 234, 0.3);
             box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.5),
-                0 0 100px rgba(139, 92, 246, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+                0 25px 50px rgba(0, 0, 0, 0.8),
+                0 0 100px rgba(147, 51, 234, 0.15),
+                inset 0 1px 0 rgba(147, 51, 234, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
             position: relative;
             z-index: 10;
             animation: containerEntrance 1.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -732,17 +754,17 @@ LOGIN_TEMPLATE = """
             bottom: -3px;
             background: linear-gradient(
                 45deg, 
-                #9333ea, 
-                #8b5cf6, 
-                #7c3aed, 
-                #6d28d9, 
-                #5b21b6, 
-                #4c1d95,
-                #9333ea
+                rgba(147, 51, 234, 0.8), 
+                rgba(139, 92, 246, 0.6), 
+                rgba(124, 58, 237, 0.4), 
+                rgba(109, 40, 217, 0.3), 
+                rgba(91, 33, 182, 0.2), 
+                rgba(76, 29, 149, 0.1),
+                rgba(147, 51, 234, 0.8)
             );
             border-radius: 35px;
             z-index: -1;
-            opacity: 0.8;
+            opacity: 0.7;
             animation: borderAura 4s ease-in-out infinite;
             background-size: 300% 300%;
         }
@@ -789,8 +811,8 @@ LOGIN_TEMPLATE = """
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-shadow: 
-                0 0 60px rgba(147, 51, 234, 0.8),
-                0 0 120px rgba(139, 92, 246, 0.4);
+                0 0 80px rgba(147, 51, 234, 1),
+                0 0 120px rgba(139, 92, 246, 0.6);
             letter-spacing: 4px;
             margin-bottom: 15px;
             animation: textGlow 3s ease-in-out infinite alternate;
@@ -799,11 +821,11 @@ LOGIN_TEMPLATE = """
         
         @keyframes textGlow {
             from { 
-                filter: brightness(1) drop-shadow(0 0 20px rgba(147, 51, 234, 0.8));
+                filter: brightness(1.2) drop-shadow(0 0 30px rgba(147, 51, 234, 1));
                 transform: scale(1);
             }
             to { 
-                filter: brightness(1.3) drop-shadow(0 0 40px rgba(147, 51, 234, 1));
+                filter: brightness(1.5) drop-shadow(0 0 50px rgba(147, 51, 234, 1.2));
                 transform: scale(1.05);
             }
         }
@@ -826,6 +848,7 @@ LOGIN_TEMPLATE = """
             background: #9333ea;
             border-radius: 50%;
             animation: orbitParticle 6s linear infinite;
+            box-shadow: 0 0 10px rgba(147, 51, 234, 0.8);
         }
         
         @keyframes orbitParticle {
@@ -842,7 +865,7 @@ LOGIN_TEMPLATE = """
             letter-spacing: 3px;
             text-transform: uppercase;
             opacity: 0.9;
-            text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+            text-shadow: 0 0 30px rgba(167, 139, 250, 0.8);
             animation: subtitlePulse 2s ease-in-out infinite alternate;
         }
         
@@ -866,14 +889,14 @@ LOGIN_TEMPLATE = """
             text-transform: uppercase;
             letter-spacing: 2px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            text-shadow: 0 0 10px rgba(233, 213, 255, 0.3);
+            text-shadow: 0 0 15px rgba(233, 213, 255, 0.5);
         }
         
         .form-group input {
             width: 100%;
             padding: 22px 25px;
-            background: rgba(26, 0, 51, 0.6);
-            border: 2px solid rgba(139, 92, 246, 0.3);
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(147, 51, 234, 0.2);
             border-radius: 20px;
             color: #fff;
             font-size: 1.1em;
@@ -885,11 +908,11 @@ LOGIN_TEMPLATE = """
         .form-group input:focus {
             outline: none;
             border-color: #9333ea;
-            background: rgba(45, 27, 105, 0.4);
+            background: rgba(0, 0, 0, 0.8);
             box-shadow: 
-                0 0 30px rgba(147, 51, 234, 0.5),
-                0 0 60px rgba(147, 51, 234, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                0 0 40px rgba(147, 51, 234, 0.6),
+                0 0 80px rgba(147, 51, 234, 0.3),
+                inset 0 1px 0 rgba(147, 51, 234, 0.3);
             transform: translateY(-3px) scale(1.02);
         }
         
@@ -945,8 +968,8 @@ LOGIN_TEMPLATE = """
             overflow: hidden;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 
-                0 10px 40px rgba(147, 51, 234, 0.4),
-                0 0 80px rgba(147, 51, 234, 0.2);
+                0 10px 40px rgba(147, 51, 234, 0.5),
+                0 0 80px rgba(147, 51, 234, 0.3);
         }
         
         /* Efeito de brilho passando pelo botão */
@@ -986,8 +1009,8 @@ LOGIN_TEMPLATE = """
         .login-btn:hover {
             transform: translateY(-5px) scale(1.03);
             box-shadow: 
-                0 15px 50px rgba(147, 51, 234, 0.6),
-                0 0 100px rgba(147, 51, 234, 0.3);
+                0 15px 50px rgba(147, 51, 234, 0.7),
+                0 0 100px rgba(147, 51, 234, 0.4);
         }
         
         .login-btn:hover::before {
@@ -1032,7 +1055,7 @@ LOGIN_TEMPLATE = """
             text-align: center;
             margin-top: 40px;
             padding: 30px;
-            background: rgba(26, 0, 51, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 20px;
             border-left: 4px solid #9333ea;
             backdrop-filter: blur(15px);
@@ -1335,9 +1358,41 @@ LOGIN_TEMPLATE = """
             }
         }
         
-        // Inicializar partículas
+        // Prevenir seleção de texto em toda a página
+        function preventSelection() {
+            document.addEventListener('selectstart', function(e) {
+                // Permitir seleção apenas em inputs
+                if (!e.target.matches('input, input *')) {
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // Prevenir cópia com Ctrl+C
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString();
+                    
+                    // Permitir cópia apenas de inputs
+                    if (!selection.anchorNode || !selection.anchorNode.parentElement || !selection.anchorNode.parentElement.matches('input')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        }
+        
+        // Inicializar partículas e proteção
         createAdvancedParticles();
         createLogoParticles();
+        preventSelection();
         
         // Elementos do formulário
         const loginForm = document.getElementById('loginForm');
