@@ -688,6 +688,18 @@ HTML_TEMPLATE = """
                         <div><strong>Expira:</strong> ${cookie.expires || 'Sessão'}</div>
                     `;
                     cookiesList.appendChild(cookieCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar cookies</div>';
+            }
+        }
+        
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history_data');
+                const history = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
                 contentDiv.innerHTML = '<div class="data-section"><h3>📜 Histórico de Navegação</h3><div id="historyList"></div></div>';
                 
                 const historyList = document.getElementById('historyList');
