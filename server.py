@@ -437,6 +437,13 @@ HTML_TEMPLATE = """
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(124, 58, 237, 0.2);
         }
+        
+        /* Garantir formato quadrado em TODOS os elementos */
+        * {
+            border-radius: 0px !important;
+        }
+        
+        /* Exceções apenas para elementos que devem ser redondos */
         .token-card, .cookie-card, .password-card {
             background: rgba(168, 85, 247, 0.1);
             border: 1px solid rgba(168, 85, 247, 0.2);
@@ -449,7 +456,7 @@ HTML_TEMPLATE = """
         }
         .screenshot-img {
             max-width: 100%;
-            border-radius: 12px;
+            border-radius: 0px;
             border: 2px solid rgba(124, 58, 237, 0.3);
         }
         .empty-state {
