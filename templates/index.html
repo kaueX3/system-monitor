@@ -422,6 +422,39 @@
         }
         .data-section-title { color: #fff; font-size: 1.05em; font-weight: 500; display: flex; align-items: center; gap: 10px; margin: 0; }
         .data-count { background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 10px; font-size: 0.8em; font-weight: 600; color: #ccc; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .search-box { position: relative; display: flex; align-items: center; }
+        .search-icon { position: absolute; left: 10px; width: 14px; height: 14px; color: #888888; transition: color 0.3s ease; pointer-events: none; }
+        .search-input { 
+            background: transparent; 
+            border: 1px solid transparent; 
+            color: #ffffff; 
+            padding: 6px 10px 6px 32px; 
+            border-radius: 4px; 
+            font-size: 0.8em; 
+            font-family: inherit;
+            width: 34px; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            outline: none; 
+            cursor: pointer;
+        }
+        .search-input::placeholder { color: transparent; transition: color 0.3s; letter-spacing: 1px; text-transform: uppercase; font-size: 0.9em; }
+        .search-input:focus, .search-input:not(:placeholder-shown) {
+            width: 160px;
+            background: rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.2);
+            cursor: text;
+        }
+        .search-input:focus::placeholder, .search-input:not(:placeholder-shown)::placeholder {
+            color: #555555;
+        }
+        .search-box:hover .search-icon { color: #ffffff; }
+        .search-input:focus + .search-icon, .search-input:not(:placeholder-shown) + .search-icon { color: #ffffff; }
+        .search-box:hover .search-input:not(:focus):not(:active):placeholder-shown {
+            background: rgba(255,255,255,0.05);
+        }
+
         .data-section-content {
             padding: 15px;
             max-height: 320px;
@@ -669,6 +702,31 @@
             } catch(e) {}
         }
         
+        function filterSectionData(sectionId, query) {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            const items = section.querySelectorAll('.data-item');
+            const lowerQuery = query.toLowerCase();
+            let count = 0;
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(lowerQuery)) {
+                    item.style.display = '';
+                    count++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            const badge = section.querySelector('.data-count');
+            if (badge && query !== '') {
+                badge.textContent = count;
+            } else if (badge) {
+                badge.textContent = items.length;
+            }
+        }
+        
         async function showDeviceData(id) {
             const modal = document.getElementById('dataModal');
             const dataDiv = document.getElementById('modalData');
@@ -697,11 +755,19 @@
 
                 function buildHeader(title, count, icon) {
                     const badge = count !== null ? `<span class="data-count">${count}</span>` : '';
+                    // Generate safe ID for section to enable search filtering
+                    const sectionId = 'sec-' + title.replace(/\s+/g, '-').toLowerCase();
                     return `
-                    <div class="data-section">
+                    <div class="data-section" id="${sectionId}">
                         <div class="data-section-header">
                             <h3 class="data-section-title">${title}</h3>
-                            ${badge}
+                            <div class="header-right">
+                                ${badge}
+                                <div class="search-box">
+                                    <input type="text" placeholder="Buscar..." class="search-input" onkeyup="filterSectionData('${sectionId}', this.value)" title="Pesquisar em ${title}">
+                                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                            </div>
                         </div>
                         <div class="data-section-content">
                     `;
