@@ -134,14 +134,14 @@
         }
         .client-card {
             background: #0a0a0a;
-            border-radius: 6px;
-            padding: 30px;
+            border-radius: 12px;
+            padding: 25px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.3s ease;
         }
         .client-card:hover {
-            border-color: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.2);
             background: #111111;
         }
         .client-header {
@@ -166,20 +166,52 @@
             border-radius: 3px;
         }
         .status.online { 
-            color: #000000; 
-            border-color: #ffffff;
-            background: #ffffff;
+            color: #22c55e; 
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
         }
         .client-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            font-size: 0.9em;
-            color: #888888;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
         }
-        .client-info div {
-            padding: 5px 0;
-            border-bottom: 1px dotted rgba(255,255,255,0.1);
+        .info-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-size: 0.75em;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .btn-ver-dados {
+            width: 100%;
+            padding: 12px;
+            background: #a855f7;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-ver-dados:hover {
+            background: #9333ea;
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
         .token-card {
             background: #0a0a0a;
@@ -426,13 +458,32 @@
                             <span class="status ${e.status}">${e.status.toUpperCase()}</span>
                         </div>
                         <div class="client-info">
-                            <div>User: ${e.user}</div>
-                            <div>IP: ${e.ip_address}</div>
-                            <div>Ext IP: ${e.external_ip}</div>
-                            <div>Platform: ${e.platform}</div>
-                            <div>RAM: ${e.ram}</div>
-                            <div>Last Seen: ${e.last_seen}</div>
+                            <div class="info-group">
+                                <span class="info-label">Usuario</span>
+                                <span class="info-value">${e.user}</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">IP Local</span>
+                                <span class="info-value">${e.ip_address}</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">IP Externo</span>
+                                <span class="info-value">${e.external_ip}</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">Plataforma</span>
+                                <span class="info-value">${e.platform}</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">RAM</span>
+                                <span class="info-value">${e.ram}</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">Ultimo Acesso</span>
+                                <span class="info-value">${e.last_seen}</span>
+                            </div>
                         </div>
+                        <button class="btn-ver-dados" onclick="showTab('logs'); document.getElementById('endpointSelect').value='${e.id}'; loadScreen();">📊 Ver Dados</button>
                     </div>
                     `;
                 }).join('');
