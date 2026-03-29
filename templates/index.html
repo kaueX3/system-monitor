@@ -480,6 +480,7 @@
             transform: scale(1) translateY(0);
             transform-origin: top;
             overflow: hidden;
+            flex-shrink: 0; /* Previne que o item amasse no flexbox */
         }
         .data-item:last-child { margin-bottom: 0; }
         .data-item.hidden-match {
