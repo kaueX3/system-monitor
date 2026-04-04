@@ -222,16 +222,23 @@
             loginBtn.textContent = 'VERIFICANDO...';
             loginBtn.disabled = true;
             
-            setTimeout(() => {
-                if (username === 'lealdade' && password === 'lealdade') {
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
                     successMsg.textContent = 'ACESSO PERMITIDO. REDIRECIONANDO...';
                     successMsg.style.display = 'block';
                     
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 2000);
+                        window.location.href = data.redirect || '/dashboard';
+                    }, 1000);
                 } else {
-                    errorMsg.textContent = 'ACESSO NEGADO.';
+                    errorMsg.textContent = data.error || 'ACESSO NEGADO.';
                     errorMsg.style.display = 'block';
                     
                     loginBtn.classList.remove('loading');
@@ -241,7 +248,14 @@
                     document.getElementById('password').value = '';
                     document.getElementById('password').focus();
                 }
-            }, 1500);
+            } catch (err) {
+                errorMsg.textContent = 'ERRO DE CONEXÃO.';
+                errorMsg.style.display = 'block';
+                
+                loginBtn.classList.remove('loading');
+                loginBtn.textContent = 'ENTRAR';
+                loginBtn.disabled = false;
+            }
         });
         
         document.getElementById('username').addEventListener('input', function() {
