@@ -20,15 +20,28 @@ def login():
     password = data.get('password', '')
     client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
     
+    if store.is_banned(client_ip):
+        store.add_log('SECURITY', 'AUTH', f"IP {client_ip} tentou acessar em período de BAN (Honeypot).")
+        return jsonify({'success': False, 'error': 'Muitas tentativas. Acesso bloqueado por 10 minutos.'}), 403
+    
     if username == 'lealdade' and password == 'lealdade':
         session.clear() # Limpa qualquer lixo de sessão anterior
         session['logged_in'] = True
         session['username'] = username
-        # Removido session.permanent = True para forçar expiração ao fechar navegador
+        
+        # Limpa o histórico de falhas do vencedor
+        if client_ip in store.failed_logins:
+            store.failed_logins[client_ip]['count'] = 0
+            
         store.add_log('SECURITY', 'AUTH', f"Login bem-sucedido (IP: {client_ip})")
         return jsonify({'success': True, 'redirect': '/dashboard'})
     else:
+        is_now_banned = store.record_failure(client_ip)
         store.add_log('WARNING', 'AUTH', f"Tentativa falha de login, credenciais: '{username}' (IP: {client_ip})")
+        
+        if is_now_banned:
+             return jsonify({'success': False, 'error': 'Bloqueado. Excesso de tentativas.'}), 403
+        
         return jsonify({'success': False, 'error': 'Credenciais inválidas'}), 401
 
 @auth_bp.route('/logout')
