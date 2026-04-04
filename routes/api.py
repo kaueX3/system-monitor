@@ -140,3 +140,8 @@ def test_api():
         'timestamp': datetime.now().isoformat(),
         'endpoints_count': len(store.endpoints)
     })
+
+@api_bp.route('/api/system_logs', methods=['GET'])
+@require_login
+def get_system_logs():
+    return jsonify(store.system_logs)
