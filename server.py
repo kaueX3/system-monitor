@@ -29,11 +29,19 @@ def after_request(response):
     
     return response
 
+import store
+
 # Middleware de logs global
 @app.before_request
 def log_request():
     if request.endpoint and 'static' not in request.endpoint:
         print(f"[REQUEST] {request.method} {request.path} - IP: {request.environ.get('REMOTE_ADDR', 'unknown')}")
+
+@app.errorhandler(404)
+def not_found(e):
+    ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+    store.add_log('WARNING', 'HTTP', f"Tentativa de acesso a rota inexistente: {request.path} (IP: {ip})")
+    return "Not Found", 404
 
 # Registrar todos os rotas modulares (blueprints)
 app.register_blueprint(auth_bp)
