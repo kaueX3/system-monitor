@@ -201,3 +201,23 @@ def check_commands(endpoint_id):
         cmd = store.command_queues[endpoint_id].pop(0)
         return jsonify({'has_command': True, 'command': cmd['command'], 'command_id': cmd['id']})
     return jsonify({'has_command': False})
+
+@api_bp.route('/api/command_result', methods=['POST'])
+def receive_command_result():
+    data = request.get_json()
+    if not data or 'endpoint_id' not in data or 'command' not in data:
+        return jsonify({'error': 'Dados inválidos'}), 400
+    
+    endpoint_id = data.get('endpoint_id')
+    command = data.get('command')
+    output = data.get('output', '')
+    return_code = data.get('return_code', 0)
+    
+    # Adicionar log do resultado
+    log_message = f"Comando '{command}' executado no endpoint {endpoint_id}. Return code: {return_code}"
+    if output:
+        log_message += f". Output: {output[:200]}{'...' if len(output) > 200 else ''}"
+    
+    store.add_log('INFO', 'C2', log_message)
+    
+    return jsonify({'success': True, 'message': 'Resultado recebido'})
