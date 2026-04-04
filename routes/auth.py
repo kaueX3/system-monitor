@@ -19,9 +19,10 @@ def login():
     password = data.get('password', '')
     
     if username == 'lealdade' and password == 'lealdade':
+        session.clear() # Limpa qualquer lixo de sessão anterior
         session['logged_in'] = True
         session['username'] = username
-        session.permanent = True
+        # Removido session.permanent = True para forçar expiração ao fechar navegador
         return jsonify({'success': True, 'redirect': '/dashboard'})
     else:
         return jsonify({'success': False, 'error': 'Credenciais inválidas'}), 401
