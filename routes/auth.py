@@ -8,12 +8,7 @@ def require_login(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
         if 'logged_in' not in session:
-            client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
-            user_agent = request.headers.get('User-Agent', 'unknown')
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
-            print(f"[SECURITY] Unauthorized access attempt from {client_ip} at {timestamp}")
-            return render_template('warning.html', timestamp=timestamp, client_ip=client_ip, user_agent=user_agent[:100] + '...' if len(user_agent) > 100 else user_agent)
+            return redirect(url_for('views.index'))
         return f(*args, **kwargs)
     return decorated_function
 
