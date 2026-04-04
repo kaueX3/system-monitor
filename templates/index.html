@@ -230,6 +230,61 @@
         .token-valid {
             border-left: 3px solid #ffffff;
         }
+        .terminal-container {
+            background: #050505;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Consolas', 'Courier New', monospace;
+            height: 600px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .terminal-container::-webkit-scrollbar { width: 6px; }
+        .terminal-container::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            font-size: 0.9em;
+            padding: 10px 15px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.02);
+            border-left: 3px solid transparent;
+            animation: fadein 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s;
+        }
+        .log-entry:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(2px);
+        }
+        .log-entry.level-INFO { border-left-color: #00c8ff; }
+        .log-entry.level-WARNING { border-left-color: #ffaa00; }
+        .log-entry.level-ERROR { border-left-color: #ff3232; }
+        .log-entry.level-SECURITY { border-left-color: #ff0064; }
+        
+        .log-time { color: #666666; min-width: 140px; flex-shrink: 0; font-size: 0.9em; }
+        .log-badge {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 800;
+            min-width: 80px;
+            text-align: center;
+            flex-shrink: 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .log-badge.info { background: rgba(0, 200, 255, 0.1); color: #00c8ff; border: 1px solid rgba(0, 200, 255, 0.2); }
+        .log-badge.warning { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.2); }
+        .log-badge.error { background: rgba(255, 50, 50, 0.1); color: #ff3232; border: 1px solid rgba(255, 50, 50, 0.2); }
+        .log-badge.security { background: rgba(255, 0, 100, 0.15); color: #ff0064; border: 1px solid rgba(255, 0, 100, 0.3); box-shadow: 0 0 10px rgba(255,0,100,0.2); }
+        
+        .log-source { color: #aaaaaa; font-weight: 600; min-width: 100px; flex-shrink: 0; text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px; }
+        .log-message { color: #ffffff; word-break: break-word; line-height: 1.4; }
         .screen-container {
             background: #050505;
             border-radius: 8px;
@@ -584,8 +639,8 @@
     <div id="logs" class="tab-content">
         <div class="section">
             <h2>Logs do Sistema</h2>
-            <div id="logsList">
-                <div class="empty">Carregando...</div>
+            <div id="logsList" class="terminal-container">
+                <div class="empty" style="border:none">Conectando ao sistema de logs...</div>
             </div>
         </div>
     </div>
@@ -961,29 +1016,29 @@
         }
         async function loadLogs() {
             try {
-                const res = await fetch('/api/metrics');
-                const metrics = await res.json();
+                const res = await fetch('/api/system_logs');
+                const logs = await res.json();
                 const container = document.getElementById('logsList');
                 
-                if (metrics.length === 0) {
-                    container.innerHTML = '<div class="empty">Nenhum log recebido</div>';
+                if (logs.length === 0) {
+                    container.innerHTML = '<div class="empty" style="border:none">Nenhum log registrado na sessão atual.</div>';
                     return;
                 }
                 
-                container.innerHTML = metrics.map(m => {
-                    const acc = m.account || {};
-                    const accInfo = acc.username 
-                        ? `User: ${acc.username}#${acc.discriminator || '0000'} ${acc.email ? ' | Email: ' + acc.email : ''} ${acc.premium_type ? ' | Nitro' : ''}`
-                        : 'Inválido';
+                container.innerHTML = logs.map(l => {
+                    const levelClass = l.level ? l.level.toLowerCase() : 'info';
                     return `
-                    <div class="token-card ${m.valid ? 'token-valid' : ''}">
-                        <div style="color:#ffffff; margin-bottom:10px; font-weight:bold; letter-spacing:1px; font-size:1.1em">${m.token}</div>
-                        <div style="color:#888888; font-size:0.85em; display:flex; gap:15px; margin-bottom:10px"><span>Endpoint: ${m.endpoint_id}</span><span>Source: ${m.source}</span></div>
-                        <div style="color:#cccccc; font-weight:500; font-size:0.9em">${accInfo}</div>
+                    <div class="log-entry level-${l.level}">
+                        <div class="log-time">${l.timestamp}</div>
+                        <div class="log-badge ${levelClass}">${l.level}</div>
+                        <div class="log-source">[${l.source}]</div>
+                        <div class="log-message">${l.message}</div>
                     </div>
                     `;
                 }).join('');
-            } catch(e) {}
+            } catch(e) {
+                console.error("Erro ao carregar logs globais", e);
+            }
         }
         
         async function loadScreen() {
