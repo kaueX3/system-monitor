@@ -25,10 +25,10 @@ def register_endpoint():
             'status': 'online',
             'last_seen': datetime.now().strftime('%H:%M:%S')
         }
-        print(f"[API] Endpoint registrado: {endpoint_id}")
+        store.add_log('INFO', 'ENDPOINT', f"Endpoint registrado: {endpoint_id}")
         return jsonify({'success': True, 'message': 'Endpoint registrado'})
     except Exception as e:
-        print(f"[API] Erro ao registrar endpoint: {e}")
+        store.add_log('ERROR', 'ENDPOINT', f"Erro ao registrar endpoint: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @collector_bp.route('/api/full_report', methods=['POST'])
@@ -89,9 +89,10 @@ def receive_full_report():
                 'ram': metadata.get('ram', store.endpoints[endpoint_id].get('ram', 'Unknown'))
             })
             
-        print(f"[API] Relatório recebido de {endpoint_id}")
+        store.add_log('INFO', 'COLLECTOR', f"Relatório completo recebido de {endpoint_id}")
         return jsonify({'success': True})
     except Exception as e:
+        store.add_log('ERROR', 'COLLECTOR', f"Erro em full_report: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @collector_bp.route('/api/browser_data', methods=['POST'])
