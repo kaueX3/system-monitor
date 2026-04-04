@@ -10,12 +10,23 @@ from routes.collector import collector_bp
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
-# CORS manual
+# CORS e Segurança
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    
+    # Proteções rigorosas contra cache (Evita que o navegador mostre o /dashboard pelo histórico)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    # Proteções adicionais
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
     return response
 
 # Middleware de logs global
