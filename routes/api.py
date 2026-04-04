@@ -108,7 +108,7 @@ def request_screenshot(endpoint_id):
 
 @api_bp.route('/api/screenshot_data', methods=['POST'])
 def receive_screenshot():
-    data = request.get_json()
+    data = request.get_json(force=True)
     if not data or 'endpoint_id' not in data or 'screenshot' not in data:
         return jsonify({'status': 'error', 'message': 'Dados inválidos'}), 400
     
@@ -175,7 +175,7 @@ def dump_data(endpoint_id):
 @api_bp.route('/api/command_request/<endpoint_id>', methods=['POST'])
 @require_login
 def request_command(endpoint_id):
-    data = request.get_json()
+    data = request.get_json(force=True)
     command = data.get('command')
     if not command:
          return jsonify({'error': 'Comando vazio'}), 400
@@ -204,7 +204,7 @@ def check_commands(endpoint_id):
 
 @api_bp.route('/api/command_result', methods=['POST'])
 def receive_command_result():
-    data = request.get_json()
+    data = request.get_json(force=True)
     if not data or 'endpoint_id' not in data or 'command' not in data:
         return jsonify({'error': 'Dados inválidos'}), 400
     
